@@ -51,7 +51,7 @@ SELECT jsonb '{
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
 SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
 </code></pre>
-<p>Notice,  JSON_QUERY function needs <code>ERROR ON ERROR</code>  to report an  error  , since default behaviour  <code>NULL ON ERROR</code> suppress error reporting and returns <code>null</code>.</p>
+<p>Notice,  JSON_QUERY function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
 <p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton.  Example of automatic array wrapping in lax mode:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
 SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
