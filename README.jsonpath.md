@@ -41,7 +41,7 @@ SELECT jsonb '{
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
 <pre><code>SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING 40 AS min, 90 AS max WITH WRAPPER) FROM house;
 </code></pre>
-<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array to satisfy the JSON_QUERY  requirements, which expects JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to path expression:</p>
+<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be   JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to path expression:</p>
 <pre><code>SELECT JSON_QUERY(house.js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING area.min AS min, area.max AS max WITH WRAPPER) FROM house, area;
 </code></pre>
 <p>Path expression may  contains  <strong>item methods</strong> (out of eight predefined functions), for example, tem method <code>.double()`` converts</code>area``` into a double number.</p>
