@@ -5,6 +5,33 @@
 
 <h2 id="jsonpath-introduction">Jsonpath introduction</h2>
 <p>SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into and SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(.)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
+<p>Example of two-floors house:</p>
+<pre><code>CREATE TABLE house AS
+SELECT jsonb '{
+  "address": {
+    "city": "Moscow",
+    "street": "Ulyanova, 7A"
+  },
+  "lift": false,
+  "floor": [
+    {
+      "level": 1,
+      "apt": [
+        {"no": 1, "area": 40, "rooms": 1},
+        {"no": 2, "area": 80, "rooms": 3},
+        {"no": 3, "area": 50, "rooms": 2}
+      ]
+    },
+    {
+      "level": 2,
+      "apt": [
+        {"no": 4, "area": 100, "rooms": 3},
+        {"no": 5, "area": 60, "rooms": 2}
+      ]
+    }
+  ]
+}' js;
+</code></pre>
 <p>For example,  the result of this path expression will be information about apartments with rooms, which area is  in specified range.</p>
 <pre><code>'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'
 </code></pre>
@@ -14,10 +41,10 @@
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
 <pre><code>SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING 40 AS min, 90 AS max WITH WRAPPER) FROM house;
 </code></pre>
-<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array to satisfy the JSON_QUERY  requirements.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to path expression:</p>
+<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array to satisfy the JSON_QUERY  requirements, which expects JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to path expression:</p>
 <pre><code>SELECT JSON_QUERY(house.js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING area.min AS min, area.max AS max WITH WRAPPER) FROM house, area;
 </code></pre>
-<p>Path expression may  contains one <strong>item method</strong> (out of eight predefined functions)  at the end.   Item method <code>.double()`` converts</code>area``` into a double number.</p>
+<p>Path expression may  contains  <strong>item methods</strong> (out of eight predefined functions), for example, tem method <code>.double()`` converts</code>area``` into a double number.</p>
 <pre><code>'$.floor[0].apt[1].area.double()'
 </code></pre>
 <p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( data doesn’t strictly match a path expression)  raises an error, while in <strong>lax</strong> mode errors will be converted to empty SQL/JSON sequences.  For example:</p>
