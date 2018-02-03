@@ -40,14 +40,25 @@ SELECT jsonb '{
 </code></pre>
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
 <pre><code>SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING 40 AS min, 90 AS max WITH WRAPPER) FROM house;
+                                                 ?column?
+-----------------------------------------------------------------------------------------------------------
+ [{"no": 2, "area": 80, "rooms": 3}, {"no": 3, "area": 50, "rooms": 2}, {"no": 5, "area": 60, "rooms": 2}]
+(1 row)
 </code></pre>
 <p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be   JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to path expression:</p>
 <pre><code>SELECT JSON_QUERY(house.js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING area.min AS min, area.max AS max WITH WRAPPER) FROM house, area;
 </code></pre>
-<p>Path expression may  contains  <strong>item methods</strong> (out of eight predefined functions), for example, tem method <code>.double()`` converts</code>area``` into a double number.</p>
+<p>Example of using several filters in json path expression, which returns room number (integer) and the room should satisfies the several conditions: the one is checking floor level and another - its area.</p>
+<pre><code>SELECT JSON_VALUE(js, '$.floor[*] ? (@.level &gt; 1).apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90).no' RETURNING int) FROM house;
+ ?column?
+----------
+        5
+(1 row)
+</code></pre>
+<p>Path expression may  contains  <strong>item methods</strong> (out of eight predefined functions), for example,  item method <code>.double()</code> converts <code>area</code> into a double number.</p>
 <pre><code>'$.floor[0].apt[1].area.double()'
 </code></pre>
-<p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to empty SQL/JSON sequences.  For example: in</p>
+<p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to empty SQL/JSON sequences.  For example:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
 SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
 </code></pre>
