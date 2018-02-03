@@ -55,8 +55,14 @@ SELECT jsonb '{
         5
 (1 row)
 </code></pre>
-<p>Path expression may  contains  <strong>item methods</strong> (out of eight predefined functions), for example,  item method <code>.double()</code> converts <code>area</code> into a double number.</p>
+<p>Path expression may  contains several  <strong>item methods</strong> (out of eight predefined functions), which applies to the result of preceding path expression. For example,  item method <code>.double()</code> converts <code>area</code> into a double number.</p>
 <pre><code>'$.floor[0].apt[1].area.double()'
+</code></pre>
+<pre><code>SELECT JSON_QUERY( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue() ? (@.key == "a" || @.key == "c").value'::jsonpath WITH WRAPPER);
+  ?column?
+------------
+ [123, 789]
+(1 row)
 </code></pre>
 <p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to empty SQL/JSON sequences.  For example:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
