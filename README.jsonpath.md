@@ -58,6 +58,7 @@ SELECT jsonb '{
 <p>Path expression may  contains several  <strong>item methods</strong> (out of eight predefined functions), which applies to the result of preceding path expression. For example,  item method <code>.double()</code> converts <code>area</code> into a double number.</p>
 <pre><code>'$.floor[0].apt[1].area.double()'
 </code></pre>
+<p>More complex example with <strong>keyvalue()</strong> method, which outputs</p>
 <pre><code>SELECT JSON_QUERY( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue() ? (@.key == "a" || @.key == "c").value'::jsonpath WITH WRAPPER);
   ?column?
 ------------
@@ -68,7 +69,7 @@ SELECT jsonb '{
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
 SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
 </code></pre>
-<p>Notice,  JSON_QUERY function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
+<p>Notice,  JSON_VALUE function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
 <p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton.  Example of automatic array wrapping in lax mode:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
 SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
