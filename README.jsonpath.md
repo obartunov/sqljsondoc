@@ -108,6 +108,15 @@ SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
 </dl>
 <h3 id="member-accessors">Member accessors</h3>
 <h3 id="filter-expession">Filter expession</h3>
+<h3 id="links">Links</h3>
+<ul>
+<li>Github Postgres Professional repository<br>
+[<a href="https://github.com/postgrespro/sqljson">https://github.com/postgrespro/sqljson</a>]</li>
+<li>WEB-interface to play with SQL/JSON<br>
+<a href="http://sqlfddle.postgrespro.ru/#!21/0/1819">http://sqlfddle.postgrespro.ru/#!21/0/1819</a></li>
+<li>Technical Report (SQL/JSON) - available for free<br>
+[<a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a>]</li>
+</ul>
 <blockquote>
 <p>Written with <a href="https://stackedit.io/">StackEdit</a>.</p>
 </blockquote>
