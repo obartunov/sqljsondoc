@@ -65,11 +65,14 @@ SELECT jsonb '{
  [123, 789]
 (1 row)
 </code></pre>
-<p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to empty SQL/JSON sequences.  For example:</p>
+<p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to the empty SQL/JSON sequences. Depending on <code>ON EMPTY</code> expression the empty SQL/JSON sequences interpreted as <code>null</code> by default ( <code>NULL ON EMPTY</code>) or raise an ERROR ( <code>ERROR ON EMPTY</code>).</p>
+<p>For example:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
-SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
 </code></pre>
 <p>Notice,  JSON_VALUE function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
+<pre><code>SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
+SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON EMPTY ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
+</code></pre>
 <p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton.  Example of automatic array wrapping in lax mode:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
 SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
@@ -111,11 +114,11 @@ SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
 <h3 id="links">Links</h3>
 <ul>
 <li>Github Postgres Professional repository<br>
-[<a href="https://github.com/postgrespro/sqljson">https://github.com/postgrespro/sqljson</a>]</li>
+<a href="https://github.com/postgrespro/sqljson">https://github.com/postgrespro/sqljson</a></li>
 <li>WEB-interface to play with SQL/JSON<br>
 <a href="http://sqlfddle.postgrespro.ru/#!21/0/1819">http://sqlfddle.postgrespro.ru/#!21/0/1819</a></li>
 <li>Technical Report (SQL/JSON) - available for free<br>
-[<a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a>]</li>
+<a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a></li>
 </ul>
 <blockquote>
 <p>Written with <a href="https://stackedit.io/">StackEdit</a>.</p>
