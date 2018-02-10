@@ -65,18 +65,6 @@ SELECT jsonb '{
  [123, 789]
 (1 row)
 </code></pre>
-<p>The path engine has two modes, strict and lax (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to the empty SQL/JSON sequences. Depending on <code>ON EMPTY</code> clause  the empty SQL/JSON sequences interpreted as <code>null</code> by default ( <code>NULL ON EMPTY</code>) or raise an ERROR ( <code>ERROR ON EMPTY</code>).</p>
-<p>For example:</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
-</code></pre>
-<p>Notice,  JSON_VALUE function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
-SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON EMPTY ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
-</code></pre>
-<p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton.  Example of automatic array wrapping in lax mode:</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
-SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
-</code></pre>
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
 <p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is a path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses.</p>
 <dl>
@@ -109,6 +97,19 @@ SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
 </dl>
 </dd>
 </dl>
+<h3 id="path-modes">Path modes</h3>
+<p>The path engine has two modes, strict and lax  (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to the empty SQL/JSON sequences. Depending on <code>ON EMPTY</code> clause  the empty SQL/JSON sequences interpreted as <code>null</code> by default ( <code>NULL ON EMPTY</code>) or raise an ERROR ( <code>ERROR ON EMPTY</code>).</p>
+<p>For example:</p>
+<pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
+</code></pre>
+<p>Notice,  JSON_VALUE function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
+<pre><code>SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
+SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON EMPTY ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
+</code></pre>
+<p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton.  Example of automatic array wrapping in lax mode:</p>
+<pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
+SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
+</code></pre>
 <h3 id="member-accessors">Member accessors</h3>
 <h3 id="filter-expession">Filter expession</h3>
 <h3 id="links">Links</h3>
