@@ -59,7 +59,7 @@ SELECT jsonb '{
 <pre><code>'$.floor[0].apt[1].area.double()'
 </code></pre>
 <p>More complex example with <strong>keyvalue()</strong> method, which outputs an array of values of keys <code>"a","b"</code>.</p>
-<pre><code>SELECT JSON_QUERY( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue() ? (@.key == "a" || @.key == "c").value'::jsonpath WITH WRAPPER);
+<pre><code>SELECT JSON_QUERY( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue() ? (@.key == "a" || @.key == "c").value' WITH WRAPPER);
   ?column?
 ------------
  [123, 789]
