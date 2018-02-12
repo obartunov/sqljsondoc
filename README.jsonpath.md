@@ -130,32 +130,38 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <p>~ <strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</p>
 </dd>
 <dd>
-<p><strong>size()</strong> -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar.</p>
+<p><strong>size()</strong> -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar.  To demonstrate this item function, we can wrap SQL/JSON sequence into an array and apply <code>.size()</code> to the result.</p>
 </dd>
-<dd>
-<p>ceiling()</p>
-</dd>
-<dd>
-<p>double()</p>
-</dd>
-<dd>
-<p>floor()</p>
-</dd>
-<dd>
-<p>abs()</p>
-</dd>
-<dd>
-<p>datetime()</p>
-</dd>
-<dd>
-<p>keyvalue()</p>
-</dd>
+</dl>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>JSON_QUERY<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'$'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'$.size()'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+?<span class="token keyword">column</span>?
+<span class="token comment">----------</span>
+       <span class="token number">1</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>JSON_QUERY<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'$.size()'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+?<span class="token keyword">column</span>?
+<span class="token comment">----------</span>
+       <span class="token number">3</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<p>or use our automatic wrapper extension to path expression</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'[$[*]].size()'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+?<span class="token keyword">column</span>?
+<span class="token comment">----------</span>
+       <span class="token number">3</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<dl>
+<dt>~ ceiling()</dt>
+<dd>double()</dd>
+<dd>floor()</dd>
+<dd>abs()</dd>
+<dd>datetime()</dd>
+<dd>keyvalue()</dd>
 <dt><strong>PostgreSQL extension</strong>:</dt>
-<dd>
-<p><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.<br>
+<dd><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.<br>
 Examples:<br>
-Wildcard member accessor returns the values of all elements without looking deep.</p>
-</dd>
+Wildcard member accessor returns the values of all elements without looking deep.</dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"> <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.*'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
       ?<span class="token keyword">column</span>?
