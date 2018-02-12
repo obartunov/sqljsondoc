@@ -86,8 +86,8 @@ SELECT jsonb '{
 <dd><strong>item method</strong> – is the function, that operate on an SQL/JSON item and return an SQL/JSON item.<br>
 It denotes as  <code>.</code> and could be one of the 8 methods:
 <dl>
-<dt>~ type()</dt>
-<dd>size()</dd>
+<dt>~ <strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</dt>
+<dd><strong>size()</strong> -</dd>
 <dd>ceiling()</dd>
 <dd>double()</dd>
 <dd>floor()</dd>
