@@ -97,7 +97,7 @@ It denotes as  <code>.</code> and could be one of the 8 methods:
 </dl>
 </dd>
 <dt><strong>PostgreSQL extension</strong>:</dt>
-<dd><strong>greedy member accessor</strong> – <code>.**</code>,  the values  of all unwrapped attributes of the current object.<br>
+<dd><strong>greedy member accessor</strong> – <code>.**</code>,   the values of all attributes of the current object regardless of the level of the hierarchy.<br>
 Examples:<br>
 Wildcard member accessor returns the values of all elements without looking deep.</dd>
 </dl>
@@ -107,7 +107,7 @@ Wildcard member accessor returns the values of all elements without looking deep
  <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<p>Greedy member accessor returns the values of all elements regardless of level of the hierarchy.</p>
+<p>Greedy member accessor “unwraps”  the objects and arrays</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.a.**'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
            ?<span class="token keyword">column</span>?
 <span class="token comment">-------------------------------</span>
