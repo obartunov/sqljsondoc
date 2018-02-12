@@ -152,13 +152,19 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <dl>
-<dt>~ ceiling()</dt>
-<dd>double()</dd>
-<dd>floor()</dd>
-<dd>abs()</dd>
-<dd>datetime()</dd>
-<dd>keyvalue()</dd>
+<dt>~  <strong>ceiling()</strong> - the same as <code>CEILING</code> in SQL</dt>
+<dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
+<dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
+<dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
+<dd><strong>datetime()</strong></dd>
+<dd><strong>keyvalue()</strong> - transforms to an SQL/JSON sequence of objects with a known schema. Example:</dd>
 </dl>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span> <span class="token string">'{"a": 123, "b": 456, "c": 789}'</span><span class="token punctuation">,</span> <span class="token string">'$.keyvalue()'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                    ?<span class="token keyword">column</span>?
+<span class="token comment">--------------------------------------------------------------------------------------</span>
+<span class="token punctuation">[</span>{<span class="token string">"key"</span>: <span class="token string">"a"</span><span class="token punctuation">,</span> <span class="token string">"value"</span>: <span class="token number">123</span>}<span class="token punctuation">,</span> {<span class="token string">"key"</span>: <span class="token string">"b"</span><span class="token punctuation">,</span> <span class="token string">"value"</span>: <span class="token number">456</span>}<span class="token punctuation">,</span> {<span class="token string">"key"</span>: <span class="token string">"c"</span><span class="token punctuation">,</span> <span class="token string">"value"</span>: <span class="token number">789</span>}<span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
 <p><strong>PostgreSQL extensions</strong>:</p>
 <ol>
 <li><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.<br>
