@@ -98,15 +98,17 @@ SELECT jsonb '{
 </dd>
 </dl>
 <h3 id="path-modes">Path modes</h3>
-<p>The path engine has two modes, strict and lax  (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it) , while in <strong>lax</strong> mode errors will be converted to the empty SQL/JSON sequences. Depending on <code>ON EMPTY</code> clause  the empty SQL/JSON sequences interpreted as <code>null</code> by default ( <code>NULL ON EMPTY</code>) or raise an ERROR ( <code>ERROR ON EMPTY</code>).</p>
-<p>For example:</p>
+<p>The path engine has two modes, strict and lax  (default mode).  They used to facilitate user working with JSON data, which often has a sloppy schema. In <strong>strict</strong> mode any structural errors ( a structural error is an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see <code>ON ERROR</code> clause) , while in <strong>lax</strong> mode the errors will be converted to the empty SQL/JSON sequences.<br>
+For example:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
 </code></pre>
 <p>Notice,  JSON_VALUE function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
+<p>Depending on <code>ON EMPTY</code> clause  the empty SQL/JSON sequences  will be  interpreted as <code>null</code> by default ( <code>NULL ON EMPTY</code>) or raise an ERROR ( <code>ERROR ON EMPTY</code>).</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
 SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON EMPTY ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
 </code></pre>
-<p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton.  Example of automatic array wrapping in lax mode:</p>
+<p>Also,  in lax mode arrays of size 1 is interchangeable with the singleton, that is, the path engine unwraps arrays or wraps scalar values to  allow  path expression match the document structure.  In the <strong>strict</strong> mode  using an array accessor on a scalar value  or  object triggers error handling.</p>
+<p>Example of automatic array wrapping in lax mode:</p>
 <pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
 SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
 </code></pre>
