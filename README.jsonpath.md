@@ -127,16 +127,28 @@ For example:</p>
 <dd>
 <p><strong>item method</strong> – is the function, that operate on an SQL/JSON item and return an SQL/JSON item.<br>
 It denotes as  <code>.</code> and could be one of the 8 methods:</p>
-<dl>
-<dt>~ <strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</dt>
-<dd><strong>size()</strong> -</dd>
-<dd>ceiling()</dd>
-<dd>double()</dd>
-<dd>floor()</dd>
-<dd>abs()</dd>
-<dd>datetime()</dd>
-<dd>keyvalue()</dd>
-</dl>
+<p>~ <strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</p>
+</dd>
+<dd>
+<p><strong>size()</strong> -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar.</p>
+</dd>
+<dd>
+<p>ceiling()</p>
+</dd>
+<dd>
+<p>double()</p>
+</dd>
+<dd>
+<p>floor()</p>
+</dd>
+<dd>
+<p>abs()</p>
+</dd>
+<dd>
+<p>datetime()</p>
+</dd>
+<dd>
+<p>keyvalue()</p>
 </dd>
 <dt><strong>PostgreSQL extension</strong>:</dt>
 <dd>
