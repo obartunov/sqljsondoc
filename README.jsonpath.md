@@ -83,10 +83,10 @@ SELECT jsonb '{
 <dd><strong>array accessor</strong>  – <code>[1,5 to LAST]</code>, the second and the six-th to the last array elements of the array</dd>
 <dd><strong>wildcard array accessor</strong> – <code>[*]</code>, all array elements. In <strong>strict</strong> mode, the operand must be an array, in <strong>lax</strong> mode, if the operand is not an array, then one is provided by wrapping it in an array before unwrapping, <code>$[*]</code> is the same as <code>$[0 to last]</code>.  The latter is not valid in <strong>strict</strong> mode, since <code>$[0 to last]</code> requires at least one array element and raise an error if <code>$</code> is the empty array , while <code>$[*]</code>  returns <code>null</code> in that case.</dd>
 <dd><strong>filter expression</strong> –  ? (expression) , the result of filter expression may be <code>unknown</code>, <code>true</code>,  <code>false</code>.</dd>
-<dd>
+<dd><strong>item method</strong> – is the function, that operate on an SQL/JSON item and return an SQL/JSON item.<br>
+It denotes as  <code>.</code> and could be one of the 8 methods:
 <dl>
-<dt><strong>item method</strong> –  <code>.</code> and one of the 8 methods:</dt>
-<dd>type()</dd>
+<dt>~ type()</dt>
 <dd>size()</dd>
 <dd>ceiling()</dd>
 <dd>double()</dd>
