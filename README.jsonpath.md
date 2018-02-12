@@ -92,7 +92,7 @@ Example <span class="token keyword">of</span> <span class="token keyword">using<
 </dd>
 <dt><strong>Path elements</strong></dt>
 <dd>
-<p><strong>member accessor</strong>  – <code>.</code>,  <code>$.color</code> - the value of the <code>color</code> attribute</p>
+<p><strong>member accessor</strong>  – <code>.name</code> or <code>."$name"</code>.  It is used to access a member of an object by key name.  If the key name does not begin with a dollar sign and meets the JavaScript rules of an Identifier, then the member name can be written in clear text, else it can be written as a character string literal. For example: <code>$.color, "$."color of a pen"</code></p>
 </dd>
 <dd>
 <p><strong>wildcard member accessor</strong>  –  <code>.*</code>, the values of all attributes of the current  object.  In <strong>strict</strong> mode, every SQL/JSON item in the SQL/JSON sequence must be an object. If this condition is not met, the result is an error. In <strong>lax</strong> mode, any SQL/JSON array in the SQL/JSON sequence is unwrapped.</p>
