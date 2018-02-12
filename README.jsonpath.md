@@ -76,16 +76,16 @@ SELECT jsonb '{
 <dd>@ – value of the current item in a filter</dd>
 <dd>last - JSON last subscript of an array</dd>
 <dt><strong>expression in parentheses</strong></dt>
-<dd>‘($.a.b + 2)’</dd>
+<dd>‘($a + 2)’</dd>
 <dt><strong>Path elements</strong></dt>
-<dd>member accessor  – .color</dd>
-<dd>wildcard member accessor  –  .*</dd>
-<dd>array accessor  – [1,2, 5 to LAST]</dd>
-<dd>wildcard array accessor – [*]</dd>
-<dd>filter expression –  ? (…)</dd>
+<dd><strong>member accessor</strong>  – <code>.color</code>, the value of the <code>color</code> attribute</dd>
+<dd><strong>wildcard member accessor</strong>  –  <code>.*</code>, the values of all attributes</dd>
+<dd><strong>array accessor</strong>  – <code>[1,5 to LAST]</code>, the second and the six-th to the last array elements of the array</dd>
+<dd><strong>wildcard array accessor</strong> – <code>[*]</code>, all array elements. Im</dd>
+<dd><strong>filter expression</strong> –  ? (expression) , the result of filter expression may be <code>unknown</code>, <code>true</code>,  <code>false</code>.</dd>
 <dd>
 <dl>
-<dt>item method –  <code>.</code> and one of the 8 methods:</dt>
+<dt><strong>item method</strong> –  <code>.</code> and one of the 8 methods:</dt>
 <dd>type()</dd>
 <dd>size()</dd>
 <dd>ceiling()</dd>
