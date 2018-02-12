@@ -78,8 +78,8 @@ SELECT jsonb '{
 <dt><strong>expression in parentheses</strong></dt>
 <dd>‘($a + 2)’</dd>
 <dt><strong>Path elements</strong></dt>
-<dd><strong>member accessor</strong>  – <code>.color</code>, the value of the <code>color</code> attribute</dd>
-<dd><strong>wildcard member accessor</strong>  –  <code>.*</code>, the values of all attributes</dd>
+<dd><strong>member accessor</strong>  – <code>.</code>,  <code>$.color</code> - the value of the <code>color</code> attribute</dd>
+<dd><strong>wildcard member accessor</strong>  –  <code>.*</code>, the values of all attributes of the current  object</dd>
 <dd><strong>array accessor</strong>  – <code>[1,5 to LAST]</code>, the second and the six-th to the last array elements of the array</dd>
 <dd><strong>wildcard array accessor</strong> – <code>[*]</code>, all array elements. In <strong>strict</strong> mode, the operand must be an array, in <strong>lax</strong> mode, if the operand is not an array, then one is provided by wrapping it in an array before unwrapping, <code>$[*]</code> is the same as <code>$[0 to last]</code>.  The latter is not valid in <strong>strict</strong> mode, since <code>$[0 to last]</code> requires at least one array element and raise an error if <code>$</code> is the empty array , while <code>$[*]</code>  returns <code>null</code> in that case.</dd>
 <dd><strong>filter expression</strong> –  ? (expression) , the result of filter expression may be <code>unknown</code>, <code>true</code>,  <code>false</code>.</dd>
@@ -96,7 +96,24 @@ It denotes as  <code>.</code> and could be one of the 8 methods:
 <dd>keyvalue()</dd>
 </dl>
 </dd>
+<dt><strong>PostgreSQL extension</strong>:</dt>
+<dd><strong>greedy member accessor</strong> – <code>.**</code>,  the values  of all unwrapped attributes of the current object.<br>
+Examples:<br>
+Wildcard member accessor returns the values of all elements without looking deep.</dd>
 </dl>
+<pre class=" language-sql"><code class="prism  language-sql"> <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.*'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+      ?<span class="token keyword">column</span>?
+<span class="token comment">--------------------</span>
+ <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Greedy member accessor returns the values of all elements regardless of level of the hierarchy.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.a.**'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+           ?<span class="token keyword">column</span>?
+<span class="token comment">-------------------------------</span>
+ <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
 <h3 id="path-modes">Path modes</h3>
 <p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the [sloppy] document structure and path expression.</p>
 <p>In <strong>strict</strong> mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see <code>ON ERROR</code> clause).<br>
