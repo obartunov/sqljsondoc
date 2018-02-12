@@ -219,7 +219,6 @@ Wildcard member accessor returns the values of all elements without looking deep
 <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<h3 id="member-accessors">Member accessors</h3>
 <h3 id="filter-expession">Filter expession</h3>
 <p>A filter expression is similar to a WHERE clause in SQL — it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>.</p>
 <pre><code>
