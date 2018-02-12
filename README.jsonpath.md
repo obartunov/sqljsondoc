@@ -35,7 +35,7 @@ SELECT jsonb '{
 <p>For example,  the result of this path expression will be information about apartments with rooms, which area is  in specified range.</p>
 <pre><code>'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'
 </code></pre>
-<p>Dollar sign <code>$</code>  designates a <strong>context item</strong> or the whole JSON document, which describes a house with floors (array <code>floor</code>), apartments (array <code>apt</code>)  with rooms and room has attribute <code>area</code>.  Expression <code>$.floor[*].apt[*]</code> in described context means  <strong>any</strong> room, which filtered by a filter expression (in parentheses).  At sign <code>@</code> in filter designates the <strong>current item</strong> in filter.   Path expression could have more filters (applied  left to right) and each of them may be nested.</p>
+<p>Dollar sign <code>$</code>  designates a <strong>context item</strong> or the whole JSON document, which describes a house with floors ( <code>floor[]</code>), apartments (<code>apt[]</code>)  with rooms and room has attribute <code>area</code>.  Expression <code>$.floor[*].apt[*]</code> in described context means  <strong>any</strong> room, which filtered by a filter expression (in parentheses).  At sign <code>@</code> in filter designates the <strong>current item</strong> in filter.   Path expression could have more filters (applied  left to right) and each of them may be nested.</p>
 <pre><code>'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90) ? (@.rooms &gt; 2)'
 </code></pre>
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
@@ -76,11 +76,11 @@ SELECT jsonb '{
 <dd>@ – value of the current item in a filter</dd>
 <dd>last - JSON last subscript of an array</dd>
 <dt><strong>expression in parentheses</strong></dt>
-<dd>‘($.a.b &gt; 2)’</dd>
+<dd>‘($.a.b + 2)’</dd>
 <dt><strong>Path elements</strong></dt>
 <dd>member accessor  – .color</dd>
 <dd>wildcard member accessor  –  .*</dd>
-<dd>array accessor  – [1,2,3]</dd>
+<dd>array accessor  – [1,2, 5 to LAST]</dd>
 <dd>wildcard array accessor – [*]</dd>
 <dd>filter expression –  ? (…)</dd>
 <dd>
