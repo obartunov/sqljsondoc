@@ -96,7 +96,7 @@ For example:</p>
 <p>$ – context item</p>
 </dd>
 <dd>
-<p>$var – named variable, value is set in PASSING clause</p>
+<p>$var – named variable, value is set in PASSING clause (<em>may be of   datetime type</em>)</p>
 </dd>
 <dd>
 <p>@ – value of the current item in a filter</p>
@@ -127,7 +127,9 @@ For example:</p>
 <dd>
 <p><strong>item method</strong> – is the function, that operate on an SQL/JSON item and return an SQL/JSON item.<br>
 It denotes as  <code>.</code> and could be one of the 8 methods:</p>
-<p>~ <strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</p>
+</dd>
+<dd>
+<p><strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</p>
 </dd>
 <dd>
 <p><strong>size()</strong> -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar.  To demonstrate this item function, we can wrap SQL/JSON sequence into an array and apply <code>.size()</code> to the result:</p>
@@ -156,9 +158,28 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
-<dd><strong>datetime()</strong></dd>
-<dd><strong>keyvalue()</strong> - transforms to an SQL/JSON sequence of objects with a known schema. Example:</dd>
+<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion<br>
+template. Notice, there is no datetime data type in SQL/JSON, it used only inside path expression.</dd>
 </dl>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  ?<span class="token keyword">column</span>?
+<span class="token comment">------------</span>
+ <span class="token number">2017</span><span class="token operator">-</span><span class="token number">03</span><span class="token operator">-</span><span class="token number">10</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"12:34:56"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime().type()'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ?<span class="token keyword">column</span>?
+<span class="token comment">------------------------</span>
+ time without time zone
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> JSON_QUERY <span class="token punctuation">(</span>
+<span class="token string">'["2017-03-10", "2017-03-11", "2017-03-09",         "12:34:56", "01:02:03 +04", "2017-03-10 00:00:00", "2017-03-10 12:34:56", "2017-03-10 01:02:03 +04", "2017-03-10 03:00:00 +03"]'</span><span class="token punctuation">,</span>
+<span class="token string">'$[*].datetime() ? (@ &lt;  "10.03.2017".datetime("dd.mm.yyyy"))'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+   ?<span class="token keyword">column</span>?
+<span class="token comment">--------------</span>
+ <span class="token string">"2017-03-09"</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<p>~ <strong>keyvalue()</strong> - transforms json to an SQL/JSON sequence of objects with a known schema. Example:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span> <span class="token string">'{"a": 123, "b": 456, "c": 789}'</span><span class="token punctuation">,</span> <span class="token string">'$.keyvalue()'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
                                     ?<span class="token keyword">column</span>?
 <span class="token comment">--------------------------------------------------------------------------------------</span>
@@ -200,6 +221,9 @@ Wildcard member accessor returns the values of all elements without looking deep
 </code></pre>
 <h3 id="member-accessors">Member accessors</h3>
 <h3 id="filter-expession">Filter expession</h3>
+<p>A filter expression is similar to a WHERE clause in SQL — it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>.</p>
+<pre><code>
+</code></pre>
 <h3 id="links">Links</h3>
 <ul>
 <li>Github Postgres Professional repository<br>
