@@ -4,10 +4,10 @@
 ---
 
 <h2 id="jsonpath-introduction">Jsonpath introduction</h2>
-<p>SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(.)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
+<p>SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
-<pre><code>CREATE TABLE house AS
-SELECT jsonb '{
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> house <span class="token keyword">AS</span>
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'{
   "address": {
     "city": "Moscow",
     "street": "Ulyanova, 7A"
@@ -30,61 +30,85 @@ SELECT jsonb '{
       ]
     }
   ]
-}' js;
+}'</span> js<span class="token punctuation">;</span>
 </code></pre>
 <p>For example,  the result of this path expression will be information about apartments with rooms, which area is  in specified range.</p>
-<pre><code>'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
 </code></pre>
 <p>Dollar sign <code>$</code>  designates a <strong>context item</strong> or the whole JSON document, which describes a house with floors ( <code>floor[]</code>), apartments (<code>apt[]</code>)  with rooms and room has attribute <code>area</code>.  Expression <code>$.floor[*].apt[*]</code> in described context means  <strong>any</strong> room, which filtered by a filter expression (in parentheses).  At sign <code>@</code> in filter designates the <strong>current item</strong> in filter.   Path expression could have more filters (applied  left to right) and each of them may be nested.</p>
-<pre><code>'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90) ? (@.rooms &gt; 2)'
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90) ? (@.rooms &gt; 2)'</span>
 </code></pre>
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
-<pre><code>SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING 40 AS min, 90 AS max WITH WRAPPER) FROM house;
-                                                 ?column?
------------------------------------------------------------------------------------------------------------
- [{"no": 2, "area": 80, "rooms": 3}, {"no": 3, "area": 50, "rooms": 2}, {"no": 5, "area": 60, "rooms": 2}]
-(1 row)
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)'</span> PASSING <span class="token number">40</span> <span class="token keyword">AS</span> min<span class="token punctuation">,</span> <span class="token number">90</span> <span class="token keyword">AS</span> max <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+                                                 ?<span class="token keyword">column</span>?
+<span class="token comment">-----------------------------------------------------------------------------------------------------------</span>
+ <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">50</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be   JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to path expression:</p>
-<pre><code>SELECT JSON_QUERY(house.js, '$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)' PASSING area.min AS min, area.max AS max WITH WRAPPER) FROM house, area;
-</code></pre>
-<p>Example of using several filters in json path expression, which returns room number (integer) and the room should satisfies the several conditions: the one is checking floor level and another - its area.</p>
-<pre><code>SELECT JSON_VALUE(js, '$.floor[*] ? (@.level &gt; 1).apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90).no' RETURNING int) FROM house;
- ?column?
-----------
-        5
-(1 row)
+<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be   JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to the path expression:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span>house<span class="token punctuation">.</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)'</span> PASSING area<span class="token punctuation">.</span>min <span class="token keyword">AS</span> min<span class="token punctuation">,</span> area<span class="token punctuation">.</span>max <span class="token keyword">AS</span> max <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">,</span> area<span class="token punctuation">;</span>
+<span class="token punctuation">`</span><span class="token punctuation">`</span><span class="token punctuation">`</span>sql
+Example <span class="token keyword">of</span> <span class="token keyword">using</span> several filters <span class="token operator">in</span> json path expression<span class="token punctuation">,</span> which <span class="token keyword">returns</span> room number <span class="token punctuation">(</span><span class="token keyword">integer</span><span class="token punctuation">)</span> <span class="token operator">and</span> the room should satisfies the several conditions: the one <span class="token operator">is</span> checking floor level <span class="token operator">and</span> another <span class="token operator">-</span> its area<span class="token punctuation">.</span>
+<span class="token punctuation">`</span><span class="token punctuation">`</span><span class="token punctuation">`</span>sql
+<span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*] ? (@.level &gt; 1).apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90).no'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?
+<span class="token comment">----------</span>
+        <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Path expression may  contains several  <strong>item methods</strong> (out of eight predefined functions), which applies to the result of preceding path expression. For example,  item method <code>.double()</code> converts <code>area</code> into a double number.</p>
-<pre><code>'$.floor[0].apt[1].area.double()'
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[0].apt[1].area.double()'</span>
 </code></pre>
 <p>More complex example with <strong>keyvalue()</strong> method, which outputs an array of values of keys <code>"a","b"</code>.</p>
-<pre><code>SELECT JSON_QUERY( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue() ? (@.key == "a" || @.key == "c").value' WITH WRAPPER);
-  ?column?
-------------
- [123, 789]
-(1 row)
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span> <span class="token string">'{"a": 123, "b": 456, "c": 789}'</span><span class="token punctuation">,</span> <span class="token string">'$.keyvalue() ? (@.key == "a" || @.key == "c").value'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  ?<span class="token keyword">column</span>?
+<span class="token comment">------------</span>
+ <span class="token punctuation">[</span><span class="token number">123</span><span class="token punctuation">,</span> <span class="token number">789</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
 <p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is a path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses.</p>
 <dl>
 <dt><strong>path literal</strong></dt>
-<dd>JSON primitive types : unicode text, numeric, true, false, null</dd>
+<dd>
+<p>JSON primitive types : unicode text, numeric, true, false, null</p>
+</dd>
 <dt><strong>path variable</strong></dt>
-<dd>$ – context item</dd>
-<dd>$var – named variable, value is set in PASSING clause</dd>
-<dd>@ – value of the current item in a filter</dd>
-<dd>last - JSON last subscript of an array</dd>
+<dd>
+<p>$ – context item</p>
+</dd>
+<dd>
+<p>$var – named variable, value is set in PASSING clause</p>
+</dd>
+<dd>
+<p>@ – value of the current item in a filter</p>
+</dd>
+<dd>
+<p>last - JSON last subscript of an array</p>
+</dd>
 <dt><strong>expression in parentheses</strong></dt>
-<dd>‘($a + 2)’</dd>
+<dd>
+<p>‘($a + 2)’</p>
+</dd>
 <dt><strong>Path elements</strong></dt>
-<dd><strong>member accessor</strong>  – <code>.</code>,  <code>$.color</code> - the value of the <code>color</code> attribute</dd>
-<dd><strong>wildcard member accessor</strong>  –  <code>.*</code>, the values of all attributes of the current  object</dd>
-<dd><strong>array accessor</strong>  – <code>[1,5 to LAST]</code>, the second and the six-th to the last array elements of the array</dd>
-<dd><strong>wildcard array accessor</strong> – <code>[*]</code>, all array elements. In <strong>strict</strong> mode, the operand must be an array, in <strong>lax</strong> mode, if the operand is not an array, then one is provided by wrapping it in an array before unwrapping, <code>$[*]</code> is the same as <code>$[0 to last]</code>.  The latter is not valid in <strong>strict</strong> mode, since <code>$[0 to last]</code> requires at least one array element and raise an error if <code>$</code> is the empty array , while <code>$[*]</code>  returns <code>null</code> in that case.</dd>
-<dd><strong>filter expression</strong> –  ? (expression) , the result of filter expression may be <code>unknown</code>, <code>true</code>,  <code>false</code>.</dd>
-<dd><strong>item method</strong> – is the function, that operate on an SQL/JSON item and return an SQL/JSON item.<br>
-It denotes as  <code>.</code> and could be one of the 8 methods:
+<dd>
+<p><strong>member accessor</strong>  – <code>.</code>,  <code>$.color</code> - the value of the <code>color</code> attribute</p>
+</dd>
+<dd>
+<p><strong>wildcard member accessor</strong>  –  <code>.*</code>, the values of all attributes of the current  object.  In <strong>strict</strong> mode, every SQL/JSON item in the SQL/JSON sequence must be an object. If this condition is not met, the result is an error. In <strong>lax</strong> mode, any SQL/JSON array in the SQL/JSON sequence is unwrapped.</p>
+</dd>
+<dd>
+<p><strong>array accessor</strong>  – <code>[1,5 to LAST]</code>, the second and the six-th to the last array elements of the array . Since jsonpath follows javascript conventions rather than SQL, <code>[0]</code> accesses is the first element in the array. <code>LAST</code> is the special variable to handle arrays of unknown length, its value is the size of the array minus 1.   In the <strong>strict</strong> mode, subscripts must be singleton numeric values between 0 and last; in <strong>lax</strong> mode, any subscripts that are out of bound are simply ignored. In both <strong>strict</strong> and <strong>lax</strong> mode, non-numeric subscripts are an error.</p>
+</dd>
+<dd>
+<p><strong>wildcard array accessor</strong> – <code>[*]</code>, all array elements. In <strong>strict</strong> mode, the operand must be an array, in <strong>lax</strong> mode, if the operand is not an array, then one is provided by wrapping it in an array before unwrapping, <code>$[*]</code> is the same as <code>$[0 to last]</code>.  The latter is not valid in <strong>strict</strong> mode, since <code>$[0 to last]</code> requires at least one array element and raise an error if <code>$</code> is the empty array , while <code>$[*]</code>  returns <code>null</code> in that case.</p>
+</dd>
+<dd>
+<p><strong>filter expression</strong> –  ? (expression) , the result of filter expression may be <code>unknown</code>, <code>true</code>,  <code>false</code>.</p>
+</dd>
+<dd>
+<p><strong>item method</strong> – is the function, that operate on an SQL/JSON item and return an SQL/JSON item.<br>
+It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <dl>
 <dt>~ <strong>type()</strong> - returns a character string that names the type of the SQL/JSON item ( <code>"null"</code>, <code>"boolean"</code>, <code>"number"</code>, <code>"string"</code>, <code>"array"</code>, <code>"object"</code>, <code>"date"</code>, <code>"time without time zone"</code>, <code>"time with time zone"</code>, <code>"timestamp without time zone"</code>, <code>"timestamp with time zone"</code>).</dt>
 <dd><strong>size()</strong> -</dd>
@@ -97,9 +121,11 @@ It denotes as  <code>.</code> and could be one of the 8 methods:
 </dl>
 </dd>
 <dt><strong>PostgreSQL extension</strong>:</dt>
-<dd><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.<br>
+<dd>
+<p><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.<br>
 Examples:<br>
-Wildcard member accessor returns the values of all elements without looking deep.</dd>
+Wildcard member accessor returns the values of all elements without looking deep.</p>
+</dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"> <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.*'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
       ?<span class="token keyword">column</span>?
@@ -114,23 +140,24 @@ Wildcard member accessor returns the values of all elements without looking deep
  <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
+<p>This extension allows search json[b] data</p>
 <h3 id="path-modes">Path modes</h3>
 <p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the [sloppy] document structure and path expression.</p>
 <p>In <strong>strict</strong> mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see <code>ON ERROR</code> clause).<br>
 For example:</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'strict $.a'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">-- returns ERROR:  SQL/JSON member not found</span>
 </code></pre>
 <p>Notice,  JSON_VALUE function needs <code>ERROR ON ERROR</code>  to report the error  , since default behaviour  <code>NULL ON ERROR</code> suppresses error reporting and returns <code>null</code>.</p>
 <p>In <strong>strict</strong> mode  using an array accessor on a scalar value  or  object triggers error handling.</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR); -- returns ERROR:  SQL/JSON array not found
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'strict $[0]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">-- returns ERROR:  SQL/JSON array not found</span>
 </code></pre>
 <p>In <strong>lax</strong> mode the path engine supresses the structural errors and  converts them to the empty SQL/JSON sequences.  Depending on <code>ON EMPTY</code> clause  the empty SQL/JSON sequences  will be  interpreted as <code>null</code> by default ( <code>NULL ON EMPTY</code>) or raise an ERROR ( <code>ERROR ON EMPTY</code>).</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR); -- returns null
-SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON EMPTY ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'lax $.a'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">-- returns null</span>
+<span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'lax $.a'</span> ERROR <span class="token keyword">ON</span> EMPTY ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">-- returns ERROR:  SQL/JSON member not found</span>
 </code></pre>
 <p>Also,  in <strong>lax</strong> mode arrays of size 1 is interchangeable with the singleton.</p>
 <p>Example of automatic array wrapping in lax mode:</p>
-<pre><code>SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR); -- returns 1
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'lax $[0]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">-- returns 1</span>
 </code></pre>
 <h3 id="member-accessors">Member accessors</h3>
 <h3 id="filter-expession">Filter expession</h3>
