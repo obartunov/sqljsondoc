@@ -19,7 +19,7 @@
       "apt": [
         {"no": 1, "area": 40, "rooms": 1},
         {"no": 2, "area": 80, "rooms": 3},
-        {"no": 3, "area": 50, "rooms": 2}
+        {"no": 3, "area": null, "rooms": 2}
       ]
     },
     {
@@ -40,9 +40,9 @@
 </code></pre>
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)'</span> PASSING <span class="token number">40</span> <span class="token keyword">AS</span> min<span class="token punctuation">,</span> <span class="token number">90</span> <span class="token keyword">AS</span> max <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-                                                 ?<span class="token keyword">column</span>?
-<span class="token comment">-----------------------------------------------------------------------------------------------------------</span>
- <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">50</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
+                                ?<span class="token keyword">column</span>?
+<span class="token comment">------------------------------------------------------------------------</span>
+ <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be   JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to the path expression:</p>
