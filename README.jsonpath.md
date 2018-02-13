@@ -3,6 +3,7 @@
 
 ---
 
+<h2 id="sqljson-data-model">SQL/JSON Data model</h2>
 <h2 id="jsonpath-introduction">Jsonpath introduction</h2>
 <p>SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
