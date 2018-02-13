@@ -158,8 +158,7 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
-<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion<br>
-template. Notice, there is no datetime data type in SQL/JSON, it used only inside path expression.</dd>
+<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template.</dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   ?<span class="token keyword">column</span>?
