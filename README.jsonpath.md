@@ -66,7 +66,7 @@
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
-<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is a path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses. <em>Path can be enclosed in brackets ( PostgreSQL extension )</em>.</p>
+<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is a path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) . <em>Path can be enclosed in brackets ( PostgreSQL extension )</em>.</p>
 <h3 id="path-modes">Path modes</h3>
 <p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the [sloppy] document structure and path expression.</p>
 <p>In <strong>strict</strong> mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see <code>ON ERROR</code> clause).<br>
