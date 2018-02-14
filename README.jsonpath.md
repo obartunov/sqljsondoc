@@ -3,10 +3,10 @@
 
 ---
 
-<h2 id="sqljson-data-model">SQL/JSON Data model</h2>
+<h2 id="introduction-to-sqljson">Introduction to SQL/JSON</h2>
 <p>tbw<br>
 SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.</p>
-<p>PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   <a href="https://www.postgresql.org/docs/current/static/datatype-json.html">json primitive types and corresponding  PostgreSQL types</a>.  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, jsonb data is already conforms to SQL/JSON data model, while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions: constructor functions (JSON_OBJECT, JSON_OBJECTAGG, JSON_ARRAY, and JSON_ARRAYAGG) and query functions (JSON_VALUE, JSON_TABLE, JSON_EXISTS, and JSON_QUERY).</p>
+<p>PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   <a href="https://www.postgresql.org/docs/current/static/datatype-json.html">json primitive types and corresponding  PostgreSQL types</a>.  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, jsonb data is already conforms to SQL/JSON data model, while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions: constructor functions (JSON_OBJECT, JSON_OBJECTAGG, JSON_ARRAY, and JSON_ARRAYAGG) and query functions (JSON_VALUE, JSON_TABLE, JSON_EXISTS, and JSON_QUERY). Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.</p>
 <h2 id="sqljson-path-language">SQL/JSON Path language</h2>
 <p>The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
@@ -72,9 +72,10 @@ SQL-2016 standard introduced SQL/JSON data model and path language used by certa
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
 <p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path.</p>
 <p>Examples of vaild jsonpath:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>::jsonpath
-<span class="token string">'($+1)'</span>::jsonpath<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>
+<span class="token string">'($+1)'</span>
 <span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
+<span class="token string">'$.floor[*].apt[*] ? (@.area == null).no'</span>
 </code></pre>
 <p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
 An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
