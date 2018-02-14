@@ -79,8 +79,8 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 <h3 id="jsonpath-operators">Jsonpath operators</h3>
 <p>To accelerate JSON path queries using existing indexes for jsonb  PostgreSQL introduced several boolean operators for json[b] and jsonpath data types.</p>
 <ul>
-<li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool</li>
-<li><code>json[b] @~ jsonpath</code> - match operator, returns bool</li>
+<li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.</li>
+<li><code>json[b] @~ jsonpath</code> - match operator, returns the result of boolean predicate (<em>PostgreSQL extension</em>).</li>
 <li><code>json[b] @* jsonpath</code> - query operator,  returns setof json[b]</li>
 </ul>
 <p>Examples:</p>
@@ -89,11 +89,19 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 <span class="token comment">----------</span>
  t
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> js @?  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 100 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+
+<span class="token keyword">SELECT</span> js @<span class="token operator">~</span>  <span class="token string">'$.floor[*].apt[*].area &lt;  20'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>?
 <span class="token comment">----------</span>
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+             ?<span class="token keyword">column</span>?
+<span class="token comment">-----------------------------------</span>
+ {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
+ {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="path-modes">Path modes</h3>
 <p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.</p>
