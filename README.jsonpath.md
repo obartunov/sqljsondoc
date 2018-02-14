@@ -4,9 +4,10 @@
 ---
 
 <h2 id="sqljson-data-model">SQL/JSON Data model</h2>
-<p>tbw</p>
-<h2 id="jsonpath-introduction">Jsonpath introduction</h2>
-<p>SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
+<p>tbw<br>
+SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.</p>
+<h2 id="sqljson-path-language">SQL/JSON Path language</h2>
+<p>The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> house <span class="token keyword">AS</span>
 <span class="token keyword">SELECT</span> jsonb <span class="token string">'{
@@ -81,9 +82,7 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 <ul>
 <li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.</li>
 <li><code>json[b] @~ jsonpath</code> - match operator, returns the result of boolean predicate (<em>PostgreSQL extension</em>).</li>
-<li><code>json[b] @* jsonpath</code> - query operator,  returns setof json[b]</li>
 </ul>
-<p>Examples:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @?  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>?
 <span class="token comment">----------</span>
@@ -95,8 +94,18 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 <span class="token comment">----------</span>
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+</code></pre>
+<p>Query operators:</p>
+<ul>
+<li><code>json[b] @* jsonpath</code> - query operator,  returns setof json[b].</li>
+<li><code>json[b] @# jsonpath</code> - query operator,  returns single json[b].<br>
+The results is depends on the size of the resulted SQL/JSON sequence:<br>
+–  empty sequence - returns SQL NULL;<br>
+– single item - returns the item;<br>
+– more items - returns array of items.<br>
+Notice, that this  behaviour differs from <code>WITH CONDITIONAL WRAPPER</code>, since the latter wraps into array a single scalar value, but not the single object or an array.</li>
+</ul>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
              ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------------</span>
  {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
@@ -143,7 +152,7 @@ For example:</p>
 </dd>
 <dt><strong>expression in parentheses</strong></dt>
 <dd>
-<p><code>'($a + 2)'</code></p>
+<p><code>($a + 2)</code></p>
 </dd>
 <dt><strong>Path elements</strong></dt>
 <dd>
