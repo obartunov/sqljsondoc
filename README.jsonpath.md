@@ -85,7 +85,7 @@ DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER
 <p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
 An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
 <h3 id="jsonpath-operators">Jsonpath operators</h3>
-<p>To accelerate JSON path queries using existing indexes for jsonb  PostgreSQL introduced several boolean operators for json[b] and jsonpath data types.</p>
+<p>To accelerate JSON path queries using existing indexes for jsonb  PostgreSQL has  several boolean operators for json[b] and jsonpath data types.</p>
 <ul>
 <li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.</li>
 <li><code>json[b] @~ jsonpath</code> - match operator, returns the result of boolean predicate (<em>PostgreSQL extension</em>).</li>
