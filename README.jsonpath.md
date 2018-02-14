@@ -331,6 +331,8 @@ Wildcard member accessor returns the values of all elements without looking deep
 <a href="http://sqlfiddle.postgrespro.ru/#!21/0/2580">http://sqlfiddle.postgrespro.ru/#!21/0/2580</a></li>
 <li>Technical Report (SQL/JSON) - available for free<br>
 <a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a></li>
+<li>Jsonb roadmap - talk at <a href="http://PGConf.eu">PGConf.eu</a>, 2018<br>
+<a href="http://www.sai.msu.su/~megera/postgres/talks/sqljson-pgconf.eu-2017.pdf">http://www.sai.msu.su/~megera/postgres/talks/sqljson-pgconf.eu-2017.pdf</a></li>
 </ul>
 <blockquote>
 <p>Written with <a href="https://stackedit.io/">StackEdit</a>.</p>
