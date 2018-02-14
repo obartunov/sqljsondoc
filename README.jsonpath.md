@@ -303,7 +303,14 @@ Wildcard member accessor returns the values of all elements without looking deep
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="filter-expression">Filter expression</h3>
-<p>A filter expression is similar to a WHERE clause in SQL — it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>.</p>
+<p>A filter expression is similar to a WHERE clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence, if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>. The SQL/JSON path language has the following predicates:</p>
+<ul>
+<li><code>exists</code> predicate, to test if a path expression has a non-empty result.</li>
+<li>Comparison predicates ==, !=, &lt;&gt;, &lt;, &lt;=, &gt;, and &gt;=.</li>
+<li><code>like_regex</code> for string pattern matching.</li>
+<li>starts with to test for an initial substring.</li>
+<li><code>is unknown</code> to test for <code>Unknown</code> results.</li>
+</ul>
 <h3 id="how-path-expression-works">How path expression works</h3>
 <p>Path expression is intended to produce an SQL/JSON sequence ( an ordered list of zero or more SQL/JSON items) and completion code for  SQL/JSON query functions or operator, whose job is to process that result using the particular SQL/JSON query operator. The path engine process path expression step by step, each of which produces SQL/JSON sequence for following step. For example,  path expression</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
