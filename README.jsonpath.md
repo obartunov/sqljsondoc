@@ -85,7 +85,7 @@ DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER
 <p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
 An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
 <h3 id="jsonpath-operators">Jsonpath operators</h3>
-<p>To accelerate JSON path queries using existing indexes for jsonb  PostgreSQL has  several boolean operators for json[b] and jsonpath data types.</p>
+<p>To accelerate JSON path queries using existing indexes for jsonb  (GIN index using built-in jsonb_ops or jsonb_path_ops)  PostgreSQL extends the standard with two  boolean operators for json[b] and jsonpath data types.</p>
 <ul>
 <li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.</li>
 <li><code>json[b] @~ jsonpath</code> - match operator, returns the result of boolean predicate (<em>PostgreSQL extension</em>).</li>
@@ -112,7 +112,7 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 <p>Query operators:</p>
 <ul>
 <li><code>json[b] @* jsonpath</code> - set-query operator,  returns setof json[b].</li>
-<li><code>json[b] @# jsonpath</code> - singleton-query operator,  returns single json[b].<br>
+<li><code>json[b] @# jsonpath</code> - singleton-query operator,  returns a single json[b].<br>
 The results is depends on the size of the resulted SQL/JSON sequence:<br>
 –  empty sequence - returns SQL NULL;<br>
 – single item - returns the item;<br>
@@ -125,6 +125,12 @@ Notice, that this  behaviour differs from <code>WITH CONDITIONAL WRAPPER</code>,
  {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> js @<span class="token comment">#  '$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)' from house;</span>
+                                ?<span class="token keyword">column</span>?
+<span class="token comment">------------------------------------------------------------------------</span>
+ <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Operator <code>@#</code> can be used to index jsonb:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> bookmarks_oper_path_idx <span class="token keyword">ON</span> bookmarks <span class="token keyword">USING</span> gin<span class="token punctuation">(</span><span class="token punctuation">(</span>js @<span class="token comment"># '$.tags.term') jsonb_path_ops);</span>
