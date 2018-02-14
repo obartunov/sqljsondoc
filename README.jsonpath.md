@@ -71,6 +71,7 @@
 <p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path.</p>
 <p>Examples of vaild jsonpath:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>::jsonpath
+<span class="token string">'($+1)'</span>::jsonpath<span class="token punctuation">;</span>
 <span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
 </code></pre>
 <p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
