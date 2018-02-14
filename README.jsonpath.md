@@ -102,6 +102,13 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
+<p><code>jsonb @? jsonpath</code> and <code>jsonb @~ jsonpath</code> are fast as <code>jsonb @&gt; jsonb</code>  (for equality operation),  but  jsonpath supports more complex expressions:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> bookmarks <span class="token keyword">WHERE</span> jb @<span class="token operator">~</span> <span class="token string">'$.updated.datetime("Dy, dd MON YYYY HH24:MI:SS") &gt; "2009-09-11".datetime("YYYY-MM-DD")'</span><span class="token punctuation">;</span>
+ Count
+<span class="token comment">--------</span>
+ <span class="token number">484341</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
 <p>Query operators:</p>
 <ul>
 <li><code>json[b] @* jsonpath</code> - set-query operator,  returns setof json[b].</li>
@@ -118,6 +125,21 @@ Notice, that this  behaviour differs from <code>WITH CONDITIONAL WRAPPER</code>,
  {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Operator <code>@#</code> can be used to index jsonb:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> bookmarks_oper_path_idx <span class="token keyword">ON</span> bookmarks <span class="token keyword">USING</span> gin<span class="token punctuation">(</span><span class="token punctuation">(</span>js @<span class="token comment"># '$.tags.term') jsonb_path_ops);</span>
+<span class="token keyword">EXPLAIN</span> <span class="token punctuation">(</span> <span class="token keyword">ANALYZE</span><span class="token punctuation">,</span> COSTS <span class="token keyword">OFF</span><span class="token punctuation">)</span> <span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> bookmarks <span class="token keyword">WHERE</span> js @<span class="token comment"># '$.tags.term' @&gt; '"NYC"';</span>
+                                              QUERY <span class="token keyword">PLAN</span>
+<span class="token comment">------------------------------------------------------------------------------------------------------</span>
+ Aggregate <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">1.136</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.136</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">1</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+   <span class="token operator">-</span><span class="token operator">&gt;</span>  Bitmap Heap Scan <span class="token keyword">on</span> bookmarks <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.213</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">1.098</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">285</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+         Recheck Cond: <span class="token punctuation">(</span><span class="token punctuation">(</span>js @<span class="token comment"># '$."tags"."term"'::jsonpath) @&gt; '"NYC"'::jsonb)</span>
+         Heap Blocks: exact<span class="token operator">=</span><span class="token number">285</span>
+         <span class="token operator">-</span><span class="token operator">&gt;</span>  Bitmap <span class="token keyword">Index</span> Scan <span class="token keyword">on</span> bookmarks_oper_path_idx <span class="token punctuation">(</span>actual time<span class="token operator">=</span><span class="token number">0.148</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token number">0.148</span> <span class="token keyword">rows</span><span class="token operator">=</span><span class="token number">285</span> loops<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+               <span class="token keyword">Index</span> Cond: <span class="token punctuation">(</span><span class="token punctuation">(</span>js @<span class="token comment"># '$."tags"."term"'::jsonpath) @&gt; '"NYC"'::jsonb)</span>
+ Planning time: <span class="token number">0.228</span> ms
+ Execution time: <span class="token number">1.309</span> ms
+<span class="token punctuation">(</span><span class="token number">8</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="path-modes">Path modes</h3>
 <p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.</p>
