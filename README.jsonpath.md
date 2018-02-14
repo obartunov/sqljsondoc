@@ -42,7 +42,7 @@
 </code></pre>
 <p>It’s possible to use the <strong>path variables</strong> in path expression, whose values are set in <strong>PASSING</strong> clause of invoked SQL/JSON function. For example (js is a column of type JSON):</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)'</span> PASSING <span class="token number">40</span> <span class="token keyword">AS</span> min<span class="token punctuation">,</span> <span class="token number">90</span> <span class="token keyword">AS</span> max <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-                                ?<span class="token keyword">column</span>?
+                               json_query
 <span class="token comment">------------------------------------------------------------------------</span>
  <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
@@ -52,9 +52,9 @@
 </code></pre>
 <p>Example of using several filters in json path expression, which returns room number (integer) and the room should satisfies the several conditions: the one is checking floor level and another - its area.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*] ? (@.level &gt; 1).apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90).no'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
- ?<span class="token keyword">column</span>?
-<span class="token comment">----------</span>
-        <span class="token number">5</span>
+ json_value
+<span class="token comment">------------</span>
+          <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Path expression may  contains several  <strong>item methods</strong> (out of eight predefined functions), which applies to the result of preceding path expression. For example,  item method <code>.double()</code> converts <code>area</code> into a double number.</p>
@@ -62,7 +62,7 @@
 </code></pre>
 <p>More complex example with <strong>keyvalue()</strong> method, which outputs an array of values of keys <code>"a","b"</code>.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span> <span class="token string">'{"a": 123, "b": 456, "c": 789}'</span><span class="token punctuation">,</span> <span class="token string">'$.keyvalue() ? (@.key == "a" || @.key == "c").value'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  ?<span class="token keyword">column</span>?
+ json_query
 <span class="token comment">------------</span>
  <span class="token punctuation">[</span><span class="token number">123</span><span class="token punctuation">,</span> <span class="token number">789</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
@@ -145,16 +145,16 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 </dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'$.size()'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
- ?<span class="token keyword">column</span>?
-<span class="token comment">----------</span>
-        <span class="token number">3</span>
+ json_value
+<span class="token comment">------------</span>
+          <span class="token number">3</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>In more complex case,  we can wrap SQL/JSON sequence into an array and apply <code>.size()</code> to the result:</p>
 <pre><code> SELECT JSON_VALUE(JSON_QUERY('[1,2,3]', '$[*] ? (@ &gt; 1)' WITH WRAPPER), '$.size()' RETURNING int);
- ?column?
-----------
-        2
+ json_value
+------------
+          2
 (1 row)
 </code></pre>
 <p>Or use our automatic wrapping extension to the path expression</p>
@@ -173,19 +173,19 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template.</dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  ?<span class="token keyword">column</span>?
+ json_value
 <span class="token comment">------------</span>
  <span class="token number">2017</span><span class="token operator">-</span><span class="token number">03</span><span class="token operator">-</span><span class="token number">10</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 <span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"12:34:56"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime().type()'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        ?<span class="token keyword">column</span>?
+       json_value
 <span class="token comment">------------------------</span>
  time without time zone
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 <span class="token keyword">SELECT</span> JSON_QUERY <span class="token punctuation">(</span>
 <span class="token string">'["2017-03-10", "2017-03-11", "2017-03-09",         "12:34:56", "01:02:03 +04", "2017-03-10 00:00:00", "2017-03-10 12:34:56", "2017-03-10 01:02:03 +04", "2017-03-10 03:00:00 +03"]'</span><span class="token punctuation">,</span>
 <span class="token string">'$[*].datetime() ? (@ &lt;  "10.03.2017".datetime("dd.mm.yyyy"))'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-   ?<span class="token keyword">column</span>?
+  json_query
 <span class="token comment">--------------</span>
  <span class="token string">"2017-03-09"</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
@@ -204,14 +204,14 @@ Examples:<br>
 Wildcard member accessor returns the values of all elements without looking deep.</li>
 </ol>
 <pre class=" language-sql"><code class="prism  language-sql"> <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.*'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-      ?<span class="token keyword">column</span>?
+     json_query
 <span class="token comment">--------------------</span>
  <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Recursive wildcard member accessor “unwraps”  all objects and arrays</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.a.**'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-           ?<span class="token keyword">column</span>?
+          json_query
 <span class="token comment">-------------------------------</span>
  <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
