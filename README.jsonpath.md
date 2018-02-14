@@ -76,6 +76,13 @@
 </code></pre>
 <p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
 An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
+<h3 id="jsonpath-operators">Jsonpath operators</h3>
+<p>To accelerate JSON path queries using existing indexes for jsonb  PostgreSQL introduced several boolean operators for json[b] and jsonpath data types.</p>
+<ul>
+<li><code>@?</code> -  exists  operator</li>
+<li><code>@~</code> - match operator</li>
+<li><code>@*</code> - query operator</li>
+</ul>
 <h3 id="path-modes">Path modes</h3>
 <p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.</p>
 <p>In <strong>strict</strong> mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see <code>ON ERROR</code> clause).<br>
@@ -103,20 +110,20 @@ For example:</p>
 </dd>
 <dt><strong>path variable</strong></dt>
 <dd>
-<p>$ – context item</p>
+<p><code>$</code> – context item</p>
 </dd>
 <dd>
-<p>$var – named variable, value is set in PASSING clause (<em>may be of   datetime type</em>)</p>
+<p><code>$var</code> – named variable, value is set in PASSING clause (<em>may be of   datetime type</em>)</p>
 </dd>
 <dd>
-<p>@ – value of the current item in a filter</p>
+<p><code>@</code> – value of the current item in a filter</p>
 </dd>
 <dd>
-<p>last - JSON last subscript of an array</p>
+<p><code>last</code> - JSON last subscript of an array</p>
 </dd>
 <dt><strong>expression in parentheses</strong></dt>
 <dd>
-<p>‘($a + 2)’</p>
+<p><code>'($a + 2)'</code></p>
 </dd>
 <dt><strong>Path elements</strong></dt>
 <dd>
