@@ -49,7 +49,7 @@ SQL-2016 standard introduced SQL/JSON data model and path language used by certa
  <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be   JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to the path expression:</p>
+<p><strong>WITH WRAPPER</strong>  is used to wrap the results into array, since  JSON_QUERY output should be  JSON text.  If minimal and maximal values are stored in table <code>area (min integer, max integer)</code>, then it is possible to pass them to the path expression:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span>house<span class="token punctuation">.</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; $min &amp;&amp; @.area &lt; $max)'</span> PASSING area<span class="token punctuation">.</span>min <span class="token keyword">AS</span> min<span class="token punctuation">,</span> area<span class="token punctuation">.</span>max <span class="token keyword">AS</span> max <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">,</span> area<span class="token punctuation">;</span>
 </code></pre>
 <p>Example of using several filters in json path expression, which returns room number (integer) and the room should satisfies the several conditions: the one is checking floor level and another - its area.</p>
@@ -76,6 +76,11 @@ SQL-2016 standard introduced SQL/JSON data model and path language used by certa
 <span class="token string">'($+1)'</span>
 <span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
 <span class="token string">'$.floor[*].apt[*] ? (@.area == null).no'</span>
+</code></pre>
+<p>Syntactical errors in jsonpath are reported</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token string">'$a. &gt;1'</span>::jsonpath<span class="token punctuation">;</span>
+ERROR:  <span class="token number">bad</span> jsonpath representation at character <span class="token number">8</span>
+DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER_P at <span class="token operator">or</span> near <span class="token string">"&gt;"</span>
 </code></pre>
 <p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
 An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
