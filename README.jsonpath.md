@@ -311,6 +311,25 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li>starts with to test for an initial substring.</li>
 <li><code>is unknown</code> to test for <code>Unknown</code> results.</li>
 </ul>
+<p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'true'</span><span class="token punctuation">,</span><span class="token string">'$ ? (@ == true)'</span><span class="token punctuation">)</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+ json_value
+<span class="token comment">------------</span>
+ <span class="token boolean">true</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'{"g": {"x": 2}}'</span> @<span class="token operator">*</span> <span class="token string">'$.g ? (exists (@.x))'</span><span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?
+<span class="token comment">----------</span>
+ {<span class="token string">"x"</span>: <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<p>JSON literal <code>null</code> are parsed into the SQL/JSON model as the SQL/JSON <code>null</code>, which is not the same as SQL <code>null</code>.  SQL/JSON <code>null</code> value is equal to itself; the result of <code>null == null</code> is <code>True</code>.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'null'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (@ == null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_query
+<span class="token comment">------------</span>
+ <span class="token boolean">null</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
 <h3 id="how-path-expression-works">How path expression works</h3>
 <p>Path expression is intended to produce an SQL/JSON sequence ( an ordered list of zero or more SQL/JSON items) and completion code for  SQL/JSON query functions or operator, whose job is to process that result using the particular SQL/JSON query operator. The path engine process path expression step by step, each of which produces SQL/JSON sequence for following step. For example,  path expression</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
