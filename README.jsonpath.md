@@ -4,6 +4,7 @@
 ---
 
 <h2 id="sqljson-data-model">SQL/JSON Data model</h2>
+<p>tbw</p>
 <h2 id="jsonpath-introduction">Jsonpath introduction</h2>
 <p>SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.  The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
@@ -67,9 +68,15 @@
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
-<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is a path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) . <em>Path can be enclosed in brackets ( PostgreSQL extension )</em>.  An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
+<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path.</p>
+<p>Examples of vaild jsonpath:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>::jsonpath
+<span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
+</code></pre>
+<p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
+An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
 <h3 id="path-modes">Path modes</h3>
-<p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the [sloppy] document structure and path expression.</p>
+<p>The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.</p>
 <p>In <strong>strict</strong> mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see <code>ON ERROR</code> clause).<br>
 For example:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'strict $.a'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">-- returns ERROR:  SQL/JSON member not found</span>
@@ -243,7 +250,7 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li>Github Postgres Professional repository<br>
 <a href="https://github.com/postgrespro/sqljson">https://github.com/postgrespro/sqljson</a></li>
 <li>WEB-interface to play with SQL/JSON<br>
-<a href="http://sqlfddle.postgrespro.ru/#!21/0/1819">http://sqlfddle.postgrespro.ru/#!21/0/1819</a></li>
+<a href="http://sqlfiddle.postgrespro.ru/#!21/0/2580">http://sqlfiddle.postgrespro.ru/#!21/0/2580</a></li>
 <li>Technical Report (SQL/JSON) - available for free<br>
 <a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a></li>
 </ul>
