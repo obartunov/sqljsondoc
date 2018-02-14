@@ -6,7 +6,7 @@
 <h2 id="sqljson-data-model">SQL/JSON Data model</h2>
 <p>tbw<br>
 SQL-2016 standard introduced SQL/JSON data model and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.</p>
-<p>PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  table in   <a href="https://www.postgresql.org/docs/current/static/datatype-json.html">json primitive types and corresponding  PostgreSQL types</a>.  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.</p>
+<p>PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   <a href="https://www.postgresql.org/docs/current/static/datatype-json.html">json primitive types and corresponding  PostgreSQL types</a>.  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, jsonb data is already conforms to SQL/JSON data model, while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions: constructor functions (JSON_OBJECT, JSON_OBJECTAGG, JSON_ARRAY, and JSON_ARRAYAGG) and query functions (JSON_VALUE, JSON_TABLE, JSON_EXISTS, and JSON_QUERY).</p>
 <h2 id="sqljson-path-language">SQL/JSON Path language</h2>
 <p>The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
@@ -98,8 +98,8 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 </code></pre>
 <p>Query operators:</p>
 <ul>
-<li><code>json[b] @* jsonpath</code> - query operator,  returns setof json[b].</li>
-<li><code>json[b] @# jsonpath</code> - query operator,  returns single json[b].<br>
+<li><code>json[b] @* jsonpath</code> - set-query operator,  returns setof json[b].</li>
+<li><code>json[b] @# jsonpath</code> - singleton-query operator,  returns single json[b].<br>
 The results is depends on the size of the resulted SQL/JSON sequence:<br>
 –  empty sequence - returns SQL NULL;<br>
 – single item - returns the item;<br>
@@ -275,7 +275,13 @@ Wildcard member accessor returns the values of all elements without looking deep
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
 </code></pre>
 <p>at first step produces SQL/JSON sequence of length 1, which is simply json itself - the context item, denoted as <code>$</code>.  Next step is member accessor <code>.floor</code> - the result is SQL/JSON sequence of length 1 - an array <code>floor</code>, which then unwrapped by  wildcard  array element accessor  <code>[*]</code> to SQL/JSON sequence of length 2, containing an array of two objects . Next, <code>.apt</code>  produces two arrays of objects and <code>[*]</code> extracts  SQL/JSON sequence of length 5 ( five objects - appartments), each of which filtered by a filter expression <code>(@.area &gt; 40 &amp;&amp; @.area &lt; 90)</code>, so a result of the whole path expression  is a sequence of two SQL/JSON items.</p>
-<p>The final result by jsonpath query operator:</p>
+<pre><code>SELECT JSON_QUERY(js,'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)' WITH WRAPPER) from house;
+                               json_query
+------------------------------------------------------------------------
+ [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
+(1 row)
+</code></pre>
+<p>The result by jsonpath set-query operator:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
              ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------------</span>
