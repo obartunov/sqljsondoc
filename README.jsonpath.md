@@ -439,9 +439,9 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li>JSON_OBJECT(KEY key VALUE value, …)</li>
 <li>JSON_ARRAY(SELECT … FORMAT JSON …)</li>
 <li>JSON_ARRAY(SELECT … (ABSENT|NULL) ON NULL …)</li>
-<li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
 </ul>
 </li>
+<li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
 <li>Use boolean  expression on the path, PostgreSQL extension</li>
 <li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
 <li>json[b] op jsonpath - PostgreSQL extension</li>
