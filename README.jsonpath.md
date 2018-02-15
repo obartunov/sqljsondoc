@@ -361,37 +361,37 @@ The SQL/JSON path language has the following predicates:</p>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Prefix search with <code>starts with</code> example:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ starts with "D")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
-    ?<span class="token keyword">column</span>?
-<span class="token comment">----------------</span>
- <span class="token string">"Dmitriya Ulyanova, 7A"</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ starts with "11")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+            ?<span class="token keyword">column</span>?
+<span class="token comment">---------------------------------</span>
+ <span class="token string">"117036, Dmitriya Ulyanova, 7A"</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Regular expression search:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- case insensitive</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "O(w|v)" flag "i")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
-    ?<span class="token keyword">column</span>?
-<span class="token comment">----------------</span>
+            ?<span class="token keyword">column</span>?
+<span class="token comment">---------------------------------</span>
  <span class="token string">"Moscow"</span>
- <span class="token string">"Dmitriya Ulyanova, 7A"</span>
+ <span class="token string">"117036, Dmitriya Ulyanova, 7A"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- ignore spaces in query, flag "x"</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "O w|o V" flag "ix")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
-    ?<span class="token keyword">column</span>?
-<span class="token comment">----------------</span>
+            ?<span class="token keyword">column</span>?
+<span class="token comment">---------------------------------</span>
  <span class="token string">"Moscow"</span>
- <span class="token string">"Dmitriya Ulyanova, 7A"</span>
+ <span class="token string">"117036, Dmitriya Ulyanova, 7A"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- single-line mode, flag "s".</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "is")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>?
 <span class="token comment">----------</span>
 <span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "im")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
 <span class="token comment">-- multi-line mode, flag "m"</span>
-                                                ?<span class="token keyword">column</span>?
-<span class="token comment">--------------------------------------------------------------------------------------------------------</span>
- <span class="token string">"Headquarter of the Postgres Professional company\nContacts:\n+7 (495) 150-06-91\ninfo@postgrespro.ru"</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "im")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+                             ?<span class="token keyword">column</span>?
+<span class="token comment">------------------------------------------------------------------</span>
+ <span class="token string">"Postgres Professional\n+7 (495) 150-06-91\ninfo@postgrespro.ru"</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Predicate <code>is unknown</code> can be used to filter “problematic” SQL/JSON items. Notice, that filter expression automatically unwraps array <code>apt</code>, since default mode is <code>lax</code>.</p>
