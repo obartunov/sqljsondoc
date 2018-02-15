@@ -337,7 +337,7 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li><code>starts with</code> to test for an initial substring (prefix).</li>
 <li><code>is unknown</code> to test for <code>Unknown</code> results. Its operand should be in parentheses.</li>
 </ul>
-<p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>. JSON literal <code>null</code> is parsed into the special SQL/JSON value <code>null</code>, which differs from SQL NULL, for example, SQL JSON <code>null</code> is equal to itself, so the result of <code>null == null</code> is <code>True</code>.</p>
+<p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'true'</span><span class="token punctuation">,</span><span class="token string">'$ ? (@ == true)'</span><span class="token punctuation">)</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
  json_value
 <span class="token comment">------------</span>
@@ -349,7 +349,7 @@ Wildcard member accessor returns the values of all elements without looking deep
  {<span class="token string">"x"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<p>JSON literal <code>null</code> are parsed into the SQL/JSON model as the SQL/JSON <code>null</code>, which is not the same as SQL <code>null</code>.  SQL/JSON <code>null</code> value is equal to itself; the result of <code>null == null</code> is <code>True</code>.</p>
+<p>JSON literal <code>null</code> is parsed into the special SQL/JSON value <code>null</code>, which differs from SQL NULL, for example, SQL JSON <code>null</code> is equal to itself, so the result of <code>null == null</code> is <code>True</code>.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null == null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
  json_query
 <span class="token comment">------------</span>
@@ -442,9 +442,10 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
 </ul>
 </li>
+<li>Use boolean  expression on the path, PostgreSQL extension</li>
 <li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
 <li>json[b] op jsonpath - PostgreSQL extension</li>
-<li>[path] - wrap sequence into an array - PostgreSQL extension</li>
+<li>[path] - wrap SQL/JSON sequences into an array - PostgreSQL extension</li>
 </ul>
 <h3 id="links">Links</h3>
 <ul>
