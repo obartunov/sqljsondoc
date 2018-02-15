@@ -253,13 +253,14 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <span class="token comment">------------------------</span>
  time without time zone
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token comment">-- all datetime examples uses timezone 'W-SU'</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?           
 <span class="token comment">-----------------------------</span>
  <span class="token string">"1957-10-04T19:28:34+00:00"</span>
  <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-<span class="token comment">-- datetime cannot  compare to string</span>
+<span class="token comment">-- datetime cannot compared to string</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>? 
 <span class="token comment">----------</span>
@@ -272,6 +273,18 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
  <span class="token string">"1957-10-04T19:28:34+00:00"</span>
  <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- </span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+          ?<span class="token keyword">column</span>?
+<span class="token comment">-----------------------------</span>
+ <span class="token string">"2015-02-01T00:00:00+03:00"</span>
+ <span class="token string">"1961-04-12T09:07:00+03:00"</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+   ?<span class="token keyword">column</span>?
+<span class="token comment">--------------</span>
+ <span class="token string">"2015-02-01"</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>~ <strong>keyvalue()</strong> - transforms json to an SQL/JSON sequence of objects with a known schema. Example:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span> <span class="token string">'{"a": 123, "b": 456, "c": 789}'</span><span class="token punctuation">,</span> <span class="token string">'$.keyvalue()'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
