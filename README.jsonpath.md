@@ -309,7 +309,7 @@ The SQL/JSON path language has the following predicates:</p>
 <li>Comparison predicates ==, !=, &lt;&gt;, &lt;, &lt;=, &gt;, and &gt;=.</li>
 <li><code>like_regex</code> for string pattern matching.</li>
 <li><code>starts with</code> to test for an initial substring.</li>
-<li><code>is unknown</code> to test for <code>Unknown</code> results.</li>
+<li><code>is unknown</code> to test for <code>Unknown</code> results. Its operand should be in parentheses.</li>
 </ul>
 <p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'true'</span><span class="token punctuation">,</span><span class="token string">'$ ? (@ == true)'</span><span class="token punctuation">)</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
@@ -335,6 +335,21 @@ The SQL/JSON path language has the following predicates:</p>
  <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
+<p>Predicate <code>is unknown</code> can be used to filter “problematic” SQL/JSON items. Notice, that filter expression automatically unwraps array <code>apt</code>, since default mode is <code>lax</code>.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.floor.apt ? ((@.area / @.rooms &gt; 0) is unknown)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+              ?<span class="token keyword">column</span>?
+<span class="token comment">-------------------------------------</span>
+ {<span class="token string">"no"</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.floor.apt ? ((@.area / @.rooms &gt; 0))'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+              ?<span class="token keyword">column</span>?
+<span class="token comment">------------------------------------</span>
+ {<span class="token string">"no"</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">1</span>}
+ {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
+ {<span class="token string">"no"</span>: <span class="token number">4</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">100</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
+ {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
 <h3 id="how-path-expression-works">How path expression works</h3>
 <p>Path expression is intended to produce an SQL/JSON sequence ( an ordered list of zero or more SQL/JSON items) and completion code for  SQL/JSON query functions or operator, whose job is to process that result using the particular SQL/JSON query operator. The path engine process path expression step by step, each of which produces SQL/JSON sequence for following step. For example,  path expression</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
@@ -357,6 +372,7 @@ The SQL/JSON path language has the following predicates:</p>
 <h3 id="sqljson-conformance">SQL/JSON conformance</h3>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
+<li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
 <li>json[b] op jsonpath - PostgreSQL extension</li>
 <li>[path] - wrap sequence into an array - PostgreSQL extension</li>
 <li></li>
