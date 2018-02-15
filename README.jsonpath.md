@@ -327,8 +327,9 @@ Wildcard member accessor returns the values of all elements without looking deep
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="filter-expression">Filter expression</h3>
-<p>A filter expression is similar to a WHERE clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.   Predicate returns <code>Unknown</code> if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>, <code>False</code> and <code>Unknown</code> are rejected.<br>
-The SQL/JSON path language has the following predicates:</p>
+<p>A filter expression is similar to a WHERE clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns <code>Unknown</code> (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>, <code>False</code> and <code>Unknown</code> are rejected.</p>
+<p>Within a filter, the special variable @ is used to reference the current SQL/JSON item in the SQL/JSON sequence.</p>
+<p>The SQL/JSON path language has the following predicates:</p>
 <ul>
 <li><code>exists</code> predicate, to test if a path expression has a non-empty result.</li>
 <li>Comparison predicates ==, !=, &lt;&gt;, &lt;, &lt;=, &gt;, and &gt;=.</li>
@@ -336,7 +337,7 @@ The SQL/JSON path language has the following predicates:</p>
 <li><code>starts with</code> to test for an initial substring (prefix).</li>
 <li><code>is unknown</code> to test for <code>Unknown</code> results. Its operand should be in parentheses.</li>
 </ul>
-<p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>.</p>
+<p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>. JSON literal <code>null</code> is parsed into the special SQL/JSON value <code>null</code>, which differs from SQL NULL, for example, SQL JSON <code>null</code> is equal to itself, so the result of <code>null == null</code> is <code>True</code>.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'true'</span><span class="token punctuation">,</span><span class="token string">'$ ? (@ == true)'</span><span class="token punctuation">)</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
  json_value
 <span class="token comment">------------</span>
