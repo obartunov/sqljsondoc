@@ -308,7 +308,7 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li><code>exists</code> predicate, to test if a path expression has a non-empty result.</li>
 <li>Comparison predicates ==, !=, &lt;&gt;, &lt;, &lt;=, &gt;, and &gt;=.</li>
 <li><code>like_regex</code> for string pattern matching.</li>
-<li>starts with to test for an initial substring.</li>
+<li><code>starts with</code> to test for an initial substring.</li>
 <li><code>is unknown</code> to test for <code>Unknown</code> results.</li>
 </ul>
 <p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>.</p>
@@ -349,6 +349,10 @@ Wildcard member accessor returns the values of all elements without looking deep
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
+<h3 id="deviations-from-the-standards">Deviations from the standards</h3>
+<ul>
+<li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
+</ul>
 <h3 id="links">Links</h3>
 <ul>
 <li>Github Postgres Professional repository<br>
