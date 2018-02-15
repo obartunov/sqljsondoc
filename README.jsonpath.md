@@ -303,7 +303,8 @@ Wildcard member accessor returns the values of all elements without looking deep
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="filter-expression">Filter expression</h3>
-<p>A filter expression is similar to a WHERE clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence, if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>(<code>False</code> and <code>Unknown</code> are rejected). The SQL/JSON path language has the following predicates:</p>
+<p>A filter expression is similar to a WHERE clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence, if they do not satisfy a predicate. The syntax uses a question mark <code>?</code> followed by a parenthesized predicate. In <strong>lax</strong> mode, any SQL/JSON arrays in the operand are unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.   Predicate returns <code>Unknown</code> if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in <code>True</code>, <code>False</code> and <code>Unknown</code> are rejected.<br>
+The SQL/JSON path language has the following predicates:</p>
 <ul>
 <li><code>exists</code> predicate, to test if a path expression has a non-empty result.</li>
 <li>Comparison predicates ==, !=, &lt;&gt;, &lt;, &lt;=, &gt;, and &gt;=.</li>
@@ -324,10 +325,15 @@ Wildcard member accessor returns the values of all elements without looking deep
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>JSON literal <code>null</code> are parsed into the SQL/JSON model as the SQL/JSON <code>null</code>, which is not the same as SQL <code>null</code>.  SQL/JSON <code>null</code> value is equal to itself; the result of <code>null == null</code> is <code>True</code>.</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'null'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (@ == null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null == null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
  json_query
 <span class="token comment">------------</span>
- <span class="token boolean">null</span>
+ <span class="token number">1</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null != null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_query
+<span class="token comment">------------</span>
+ <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="how-path-expression-works">How path expression works</h3>
@@ -352,6 +358,9 @@ Wildcard member accessor returns the values of all elements without looking deep
 <h3 id="sqljson-conformance">SQL/JSON conformance</h3>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
+<li>json[b] op jsonpath - PostgreSQL extension</li>
+<li>[path] - wrap sequence into an array - PostgreSQL extension</li>
+<li></li>
 </ul>
 <h3 id="links">Links</h3>
 <ul>
