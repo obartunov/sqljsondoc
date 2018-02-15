@@ -349,7 +349,7 @@ Wildcard member accessor returns the values of all elements without looking deep
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
-<h3 id="deviations-from-the-standards">Deviations from the standards</h3>
+<h3 id="sqljson-conformance">SQL/JSON conformance</h3>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
 </ul>
