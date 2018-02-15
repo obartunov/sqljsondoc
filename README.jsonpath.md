@@ -241,7 +241,7 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
-<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template.</dd>
+<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>).</dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
  json_value
@@ -253,13 +253,25 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <span class="token comment">------------------------</span>
  time without time zone
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> JSON_QUERY <span class="token punctuation">(</span>
-<span class="token string">'["2017-03-10", "2017-03-11", "2017-03-09",         "12:34:56", "01:02:03 +04", "2017-03-10 00:00:00", "2017-03-10 12:34:56", "2017-03-10 01:02:03 +04", "2017-03-10 03:00:00 +03"]'</span><span class="token punctuation">,</span>
-<span class="token string">'$[*].datetime() ? (@ &lt;  "10.03.2017".datetime("dd.mm.yyyy"))'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-  json_query
-<span class="token comment">--------------</span>
- <span class="token string">"2017-03-09"</span>
-<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+          ?<span class="token keyword">column</span>?           
+<span class="token comment">-----------------------------</span>
+ <span class="token string">"1957-10-04T19:28:34+00:00"</span>
+ <span class="token string">"1961-04-12T06:07:00+00:00"</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- datetime cannot  compare to string</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>? 
+<span class="token comment">----------</span>
+<span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- rejected items in previous query</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? ((@ &lt; "2000-01-01") is unknown)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+          ?<span class="token keyword">column</span>?           
+<span class="token comment">-----------------------------</span>
+ <span class="token string">"2015-02-01T00:00:00+00:00"</span>
+ <span class="token string">"1957-10-04T19:28:34+00:00"</span>
+ <span class="token string">"1961-04-12T06:07:00+00:00"</span>
+<span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <p>~ <strong>keyvalue()</strong> - transforms json to an SQL/JSON sequence of objects with a known schema. Example:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span> <span class="token string">'{"a": 123, "b": 456, "c": 789}'</span><span class="token punctuation">,</span> <span class="token string">'$.keyvalue()'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
