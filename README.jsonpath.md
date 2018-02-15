@@ -433,10 +433,18 @@ Wildcard member accessor returns the values of all elements without looking deep
 <h3 id="sqljson-conformance">SQL/JSON conformance</h3>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
+<li>Not supported (due to unresolved conflicts in SQL grammar):
+<ul>
+<li>expr FORMAT JSON IS [NOT] JSON</li>
+<li>JSON_OBJECT(KEY key VALUE value, …)</li>
+<li>JSON_ARRAY(SELECT … FORMAT JSON …)</li>
+<li>JSON_ARRAY(SELECT … (ABSENT|NULL) ON NULL …)</li>
+<li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
+</ul>
+</li>
 <li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
 <li>json[b] op jsonpath - PostgreSQL extension</li>
 <li>[path] - wrap sequence into an array - PostgreSQL extension</li>
-<li></li>
 </ul>
 <h3 id="links">Links</h3>
 <ul>
