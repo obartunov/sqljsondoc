@@ -314,30 +314,36 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 Examples:<br>
 Wildcard member accessor returns the values of all elements without looking deep.</li>
 </ol>
-<pre class=" language-sql"><code class="prism  language-sql"> <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.*'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-     json_query
-<span class="token comment">--------------------</span>
- <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span>
-<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.*'</span><span class="token punctuation">;</span>
+   ?<span class="token keyword">column</span>?
+<span class="token comment">---------------</span>
+ {<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}
+ <span class="token number">1</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Recursive wildcard member accessor “unwraps”  all objects and arrays</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span><span class="token punctuation">,</span><span class="token string">'$.a.**'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-          json_query
-<span class="token comment">-------------------------------</span>
- <span class="token punctuation">[</span>{<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
-<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.**'</span><span class="token punctuation">;</span>
+           ?<span class="token keyword">column</span>?
+<span class="token comment">------------------------------</span>
+ {<span class="token string">"a"</span>: {<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token string">"c"</span>: <span class="token number">1</span>}
+ {<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}
+ <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
+ <span class="token number">1</span>
+ <span class="token number">2</span>
+ <span class="token number">1</span>
+<span class="token punctuation">(</span><span class="token number">6</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <ol start="2">
-<li><strong>automatic wrapping</strong>  - <code>[path]</code> is equivalent to <code>WITH WRAPPER</code> in SQL_XXX function</li>
+<li><strong>automatic wrapping</strong>  - <code>[path]</code> is equivalent to <code>WITH WRAPPER</code> in SQL_XXX function.</li>
 </ol>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'[$[*]]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-?<span class="token keyword">column</span>?
-<span class="token comment">-----------</span>
+json_query
+<span class="token comment">------------</span>
 <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
-?<span class="token keyword">column</span>?
-<span class="token comment">-----------</span>
+json_query
+<span class="token comment">------------</span>
 <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
