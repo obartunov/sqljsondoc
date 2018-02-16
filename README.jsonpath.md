@@ -9,11 +9,16 @@
 <h2 id="sqljson-path-language">SQL/JSON Path language</h2>
 <p>The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for that functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> house <span class="token keyword">AS</span>
-<span class="token keyword">SELECT</span> jsonb <span class="token string">'{
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> house<span class="token punctuation">(</span>js<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">SELECT</span> jsonb <span class="token string">'
+{
+  "info": {
+    "contacts": "Postgres Professional\n+7 (495) 150-06-91\ninfo@postgrespro.ru",
+    "dates": ["01-02-2015", "04-10-1957 19:28:34 +00", "12-04-1961 09:07:00 +03"]
+  },
   "address": {
+    "country": "Russia",
     "city": "Moscow",
-    "street": "Ulyanova, 7A"
+    "street": "117036, Dmitriya Ulyanova, 7A"
   },
   "lift": false,
   "floor": [
@@ -33,7 +38,8 @@
       ]
     }
   ]
-}'</span> js<span class="token punctuation">;</span>
+}
+'</span><span class="token punctuation">;</span>
 </code></pre>
 <p>For example,  the result of this path expression will be information about apartments with rooms, which area is  in specified range.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
@@ -73,6 +79,8 @@
 <p>Examples of vaild jsonpath:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>
 <span class="token string">'($+1)'</span>
+<span class="token string">'$+1'</span>
+<span class="token comment">-- boolean predicate in path, extension</span>
 <span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
 <span class="token string">'$.floor[*].apt[*] ? (@.area == null).no'</span>
 </code></pre>
@@ -89,23 +97,23 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
 <li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.</li>
 <li><code>json[b] @~ jsonpath</code> - match operator, returns the result of boolean predicate (<em>PostgreSQL extension</em>).</li>
 </ul>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @?  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @?  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>?
 <span class="token comment">----------</span>
  t
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 
-<span class="token keyword">SELECT</span> js @<span class="token operator">~</span>  <span class="token string">'$.floor[*].apt[*].area &lt;  20'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">~</span>  <span class="token string">'$.floor[*].apt[*].area &lt;  20'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>?
 <span class="token comment">----------</span>
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p><code>jsonb @? jsonpath</code> and <code>jsonb @~ jsonpath</code> are fast as <code>jsonb @&gt; jsonb</code>  (for equality operation),  but  jsonpath supports more complex expressions:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> bookmarks <span class="token keyword">WHERE</span> jb @<span class="token operator">~</span> <span class="token string">'$.updated.datetime("Dy, dd MON YYYY HH24:MI:SS") &gt; "2009-09-11".datetime("YYYY-MM-DD")'</span><span class="token punctuation">;</span>
- Count
-<span class="token comment">--------</span>
- <span class="token number">484341</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house <span class="token keyword">WHERE</span>   js @<span class="token operator">~</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH")  &gt; "1945-03-09".datetime()'</span><span class="token punctuation">;</span>
+ count
+<span class="token comment">-------</span>
+     <span class="token number">1</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Query operators:</p>
@@ -118,14 +126,14 @@ The results is depends on the size of the resulted SQL/JSON sequence:<br>
 – more items - returns array of items.<br>
 Notice, that this  behaviour differs from <code>WITH CONDITIONAL WRAPPER</code>, since the latter wraps into array a single scalar value, but not the single object or an array.</li>
 </ul>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
              ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------------</span>
  {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 
-<span class="token keyword">SELECT</span> js @<span class="token comment">#  '$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)' from house;</span>
+<span class="token keyword">SELECT</span> js @<span class="token comment">#  '$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)' FROM house;</span>
                                 ?<span class="token keyword">column</span>?
 <span class="token comment">------------------------------------------------------------------------</span>
  <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
@@ -253,7 +261,7 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 <span class="token comment">------------------------</span>
  time without time zone
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-<span class="token comment">-- all datetime examples uses timezone 'W-SU'</span>
+<span class="token comment">-- all datetime examples are obtained with timezone 'W-SU'</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?           
 <span class="token comment">-----------------------------</span>
@@ -261,12 +269,12 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
  <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- datetime cannot compared to string</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>? 
 <span class="token comment">----------</span>
 <span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- rejected items in previous query</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? ((@ &lt; "2000-01-01") is unknown)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? ((@ &lt; "2000-01-01") is unknown)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?           
 <span class="token comment">-----------------------------</span>
  <span class="token string">"2015-02-01T00:00:00+00:00"</span>
@@ -274,13 +282,20 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
  <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- </span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------</span>
  <span class="token string">"2015-02-01T00:00:00+03:00"</span>
  <span class="token string">"1961-04-12T09:07:00+03:00"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token comment">-- set timezone = 'UTC';</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+          ?<span class="token keyword">column</span>?
+<span class="token comment">-----------------------------</span>
+ <span class="token string">"2015-02-01T00:00:00+00:00"</span>
+ <span class="token string">"1961-04-12T06:07:00+00:00"</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
    ?<span class="token keyword">column</span>?
 <span class="token comment">--------------</span>
  <span class="token string">"2015-02-01"</span>
@@ -338,7 +353,7 @@ Wildcard member accessor returns the values of all elements without looking deep
 <li><code>is unknown</code> to test for <code>Unknown</code> results. Its operand should be in parentheses.</li>
 </ul>
 <p>JSON literals <code>true, false</code> are parsed into the SQL/JSON model as the SQL boolean values <code>True</code> and <code>False</code>.</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'true'</span><span class="token punctuation">,</span><span class="token string">'$ ? (@ == true)'</span><span class="token punctuation">)</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'true'</span><span class="token punctuation">,</span><span class="token string">'$ ? (@ == true)'</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
  json_value
 <span class="token comment">------------</span>
  <span class="token boolean">true</span>
@@ -362,7 +377,7 @@ Wildcard member accessor returns the values of all elements without looking deep
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Prefix search with <code>starts with</code> example:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ starts with "11")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ starts with "11")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
             ?<span class="token keyword">column</span>?
 <span class="token comment">---------------------------------</span>
  <span class="token string">"117036, Dmitriya Ulyanova, 7A"</span>
@@ -370,26 +385,26 @@ Wildcard member accessor returns the values of all elements without looking deep
 </code></pre>
 <p>Regular expression search:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- case insensitive</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "O(w|v)" flag "i")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "O(w|v)" flag "i")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
             ?<span class="token keyword">column</span>?
 <span class="token comment">---------------------------------</span>
  <span class="token string">"Moscow"</span>
  <span class="token string">"117036, Dmitriya Ulyanova, 7A"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- ignore spaces in query, flag "x"</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "O w|o V" flag "ix")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "O w|o V" flag "ix")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
             ?<span class="token keyword">column</span>?
 <span class="token comment">---------------------------------</span>
  <span class="token string">"Moscow"</span>
  <span class="token string">"117036, Dmitriya Ulyanova, 7A"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- single-line mode, flag "s".</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "is")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "is")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>?
 <span class="token comment">----------</span>
 <span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- multi-line mode, flag "m"</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "im")'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.** ? (@ like_regex "^info@" flag "im")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
                              ?<span class="token keyword">column</span>?
 <span class="token comment">------------------------------------------------------------------</span>
  <span class="token string">"Postgres Professional\n+7 (495) 150-06-91\ninfo@postgrespro.ru"</span>
@@ -416,14 +431,14 @@ Wildcard member accessor returns the values of all elements without looking deep
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
 </code></pre>
 <p>at first step produces SQL/JSON sequence of length 1, which is simply json itself - the context item, denoted as <code>$</code>.  Next step is member accessor <code>.floor</code> - the result is SQL/JSON sequence of length 1 - an array <code>floor</code>, which then unwrapped by  wildcard  array element accessor  <code>[*]</code> to SQL/JSON sequence of length 2, containing an array of two objects . Next, <code>.apt</code>  produces two arrays of objects and <code>[*]</code> extracts  SQL/JSON sequence of length 5 ( five objects - appartments), each of which filtered by a filter expression <code>(@.area &gt; 40 &amp;&amp; @.area &lt; 90)</code>, so a result of the whole path expression  is a sequence of two SQL/JSON items.</p>
-<pre><code>SELECT JSON_QUERY(js,'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)' WITH WRAPPER) from house;
+<pre><code>SELECT JSON_QUERY(js,'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)' WITH WRAPPER) FROM house;
                                json_query
 ------------------------------------------------------------------------
  [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
 (1 row)
 </code></pre>
 <p>The result by jsonpath set-query operator:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">from</span> house<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
              ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------------</span>
  {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}
