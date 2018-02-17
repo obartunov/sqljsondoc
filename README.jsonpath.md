@@ -261,7 +261,6 @@ SELECT JSON_VALUE('[1,2,3]', '$.size()' RETURNING int);
 (1 row)
 ```
 In more complex case,  we can wrap SQL/JSON sequence into an array and apply ```.size()``` to the result:
-
 ```sql
  SELECT JSON_VALUE(JSON_QUERY('[1,2,3]', '$[*] ? (@ > 1)' WITH WRAPPER), '$.size()' RETURNING int);
  json_value
@@ -538,5 +537,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTYzMzE1NDQ3N119
+eyJoaXN0b3J5IjpbMTM1NjgyNDUxMV19
 -->
