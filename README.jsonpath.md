@@ -255,7 +255,7 @@ json_value
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <dl>
-<dt>~  <strong>ceiling()</strong> - the same as <code>CEILING</code> in SQL</dt>
+<dt>~ <strong>ceiling()</strong> - the same as <code>CEILING</code> in SQL</dt>
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
