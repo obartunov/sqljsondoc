@@ -248,11 +248,10 @@ It denotes as  <code>.</code> and could be one of the 8 methods:</p>
 </code></pre>
 <p>Or use our automatic wrapping extension to the path expression</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'[$[*] ? (@ &gt; 1)].size()'</span> RETURNING <span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-?<span class="token keyword">column</span>?
-<span class="token comment">----------</span>
-       <span class="token number">2</span>
+json_value
+<span class="token comment">------------</span>
+         <span class="token number">2</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-
 </code></pre>
 <dl>
 <dt>~  <strong>ceiling()</strong> - the same as <code>CEILING</code> in SQL</dt>
