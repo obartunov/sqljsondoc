@@ -75,7 +75,7 @@
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
-<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path.</p>
+<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path. <em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.</p>
 <p>Examples of vaild jsonpath:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>
 <span class="token string">'($+1)'</span>
@@ -89,10 +89,9 @@
 ERROR:  <span class="token number">bad</span> jsonpath representation at character <span class="token number">8</span>
 DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER_P at <span class="token operator">or</span> near <span class="token string">"&gt;"</span>
 </code></pre>
-<p><em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.<br>
-An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
+<p>An <a href="#how-path-expression-works">Example</a> of how path expression works.</p>
 <h3 id="jsonpath-operators">Jsonpath operators</h3>
-<p>To accelerate JSON path queries using existing indexes for jsonb  (GIN index using built-in jsonb_ops or jsonb_path_ops)  PostgreSQL extends the standard with two  boolean operators for json[b] and jsonpath data types.</p>
+<p>To accelerate JSON path queries using existing indexes for jsonb  (GIN index using built-in  <code>jsonb_ops</code> or <code>jsonb_path_ops</code>)  PostgreSQL extends the standard with two  boolean operators for json[b] and jsonpath data types.</p>
 <ul>
 <li><code>json[b] @? jsonpath</code> -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.</li>
 <li><code>json[b] @~ jsonpath</code> - match operator, returns the result of boolean predicate (<em>PostgreSQL extension</em>).</li>
@@ -109,7 +108,7 @@ An <a href="#how-path-expression-works">Example</a> of how path expression works
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<p><code>jsonb @? jsonpath</code> and <code>jsonb @~ jsonpath</code> are fast as <code>jsonb @&gt; jsonb</code>  (for equality operation),  but  jsonpath supports more complex expressions:</p>
+<p><code>jsonb @? jsonpath</code> and <code>jsonb @~ jsonpath</code> are as fast as <code>jsonb @&gt; jsonb</code>  (for equality operation),  but  jsonpath supports more complex expressions, for example:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house <span class="token keyword">WHERE</span>   js @<span class="token operator">~</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH")  &gt; "1945-03-09".datetime()'</span><span class="token punctuation">;</span>
  count
 <span class="token comment">-------</span>
