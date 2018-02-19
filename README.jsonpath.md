@@ -484,6 +484,8 @@ json_query
 <a href="https://github.com/postgrespro/sqljson">https://github.com/postgrespro/sqljson</a></li>
 <li>WEB-interface to play with SQL/JSON<br>
 <a href="http://sqlfiddle.postgrespro.ru/#!21/0/2580">http://sqlfiddle.postgrespro.ru/#!21/0/2580</a></li>
+<li>Try SQL/JSON on your android phone<br>
+<a href="https://obartunov.livejournal.com/199005.html">https://obartunov.livejournal.com/199005.html</a></li>
 <li>Technical Report (SQL/JSON) - available for free<br>
 <a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a></li>
 <li>Jsonb roadmap - talk at <a href="http://PGConf.eu">PGConf.eu</a>, 2018<br>
