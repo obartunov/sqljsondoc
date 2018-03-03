@@ -453,7 +453,8 @@ json_query
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
-<h3 id="sqljson-functions">SQL/JSON functions</h3>
+<h2 id="sqljson-functions">SQL/JSON functions</h2>
+<h3 id="introduction-to-sqljson-functions">Introduction to SQL/JSON functions</h3>
 <p>The SQL/JSON construction functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. They are mostly the same as corresponding json[b] construction functions.</p>
 <ul>
 <li>JSON_OBJECT -  construct a JSON[b] object, like json[b]_build_object()</li>
@@ -469,7 +470,28 @@ json_query
 <li>IS [NOT] JSON - test whether a string value is a JSON text.</li>
 <li>JSON_EXISTS - test whether a JSON path expression returns any SQL/JSON items</li>
 </ul>
-<h3 id="sqljson-conformance">SQL/JSON conformance</h3>
+<h3 id="json_object---construct-a-jsonb-object">JSON_OBJECT - construct a JSON[b] object</h3>
+<p>Internally transformed into a json[b]_build_object call.<br>
+Syntax:</p>
+<pre><code>JSON_OBJECT (
+  [ { expression {VALUE | ':'} json_value_expression }[,…] ]
+  [ { NULL | ABSENT } ON NULL ]
+  [ { WITH | WITHOUT } UNIQUE [ KEYS ] ]
+  [ RETURNING data_type [ FORMAT JSON ] ]
+)
+
+json_value_expression ::=
+	expression [ FORMAT JSON ]
+</code></pre>
+<ul>
+<li>RETURNING type:<br>
+– one of json (default), jsonb, string type, bytea or having cast from json<br>
+– jsonb_build_object() is used for  RETURNING jsonb<br>
+– json_build_object() - for other types</li>
+<li>Key uniqueness check: {WITH|WITHOUT} UNIQUES [KEYS]</li>
+<li>ability to omit keys with NULL values: {ABSENT|NULL} ON NULL</li>
+</ul>
+<h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
 <li>Not supported (due to unresolved conflicts in SQL grammar):
@@ -486,7 +508,7 @@ json_query
 <li>json[b] op jsonpath - PostgreSQL extension</li>
 <li>[path] - wrap SQL/JSON sequences into an array - PostgreSQL extension</li>
 </ul>
-<h3 id="links">Links</h3>
+<h2 id="links">Links</h2>
 <ul>
 <li>Github Postgres Professional repository<br>
 <a href="https://github.com/postgrespro/sqljson">https://github.com/postgrespro/sqljson</a></li>
