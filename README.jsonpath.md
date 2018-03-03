@@ -522,6 +522,17 @@ ERROR:  duplicate JSON <span class="token keyword">key</span> <span class="token
 <span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'area'</span> : <span class="token number">20</span> <span class="token operator">+</span> <span class="token number">30</span><span class="token punctuation">,</span> <span class="token string">'rooms'</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'no'</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">'area'</span> : <span class="token boolean">NULL</span> ABSENT <span class="token keyword">ON</span> <span class="token boolean">NULL</span> <span class="token keyword">WITH</span> <span class="token keyword">UNIQUE</span> <span class="token keyword">KEYS</span> RETURNING jsonb<span class="token punctuation">)</span> <span class="token keyword">AS</span> apt<span class="token punctuation">;</span>
 ERROR:  duplicate JSON <span class="token keyword">key</span> <span class="token string">"area"</span>
 </code></pre>
+<h3 id="json_objectagg---aggregates-namevalue-pairs--as-jsonb-object">JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object</h3>
+<p>Syntax:</p>
+<pre><code>JSON_OBJECTAGG (
+  expression { VALUE | ':' } expression [ FORMAT JSON ]
+  [ { NULL | ABSENT } ON NULL ]
+  [ { WITH | WITHOUT } UNIQUE [ KEYS ] ]
+  [ RETURNING data_type [ FORMAT JSON ] ]
+)
+
+Options and RETURNING clause are the same as in JSON_OBJECT.
+</code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
