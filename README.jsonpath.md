@@ -6,7 +6,7 @@
 <!--stackedit_data:&amp;#10;eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19&amp;#10;-->
 <h2 id="introduction-to-sqljson">Introduction to SQL/JSON</h2>
 <p>SQL-2016 standard doesn’t describes the JSON data type, but instead it  introduced SQL/JSON data model (not JSON data type) and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects. SQL-2016 standard doesn’t describe JSON data type</p>
-<p>PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   <a href="https://www.postgresql.org/docs/current/static/datatype-json.html">json primitive types and corresponding  PostgreSQL types</a>.  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, jsonb data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions: constructor functions (JSON_OBJECT, JSON_OBJECTAGG, JSON_ARRAY, and JSON_ARRAYAGG) and query functions (JSON_VALUE, JSON_TABLE, JSON_EXISTS, and JSON_QUERY). Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.</p>
+<p>PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   <a href="https://www.postgresql.org/docs/current/static/datatype-json.html">json primitive types and corresponding  PostgreSQL types</a>.  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, jsonb data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions: constructor functions (JSON_OBJECT, JSON_OBJECTAGG, JSON_ARRAY, and JSON_ARRAYAGG) and query functions (JSON_VALUE, JSON_TABLE, JSON_EXISTS, and JSON_QUERY). Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types  (JSON_VALUE).</p>
 <h2 id="sqljson-path-language">SQL/JSON Path language</h2>
 <p>The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for SQL/JSON query functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(<code>.</code>)  used for member access and [] for array access, arrays starts from zero (SQL arrays starts from 1).</p>
 <p>Example of two-floors house:</p>
@@ -460,6 +460,14 @@ json_query
 <li>JSON_ARRAY -  construct a JSON[b] array, like json[b]_build_array()</li>
 <li>JSON_ARRAYAGG -  aggregates values as JSON[b] array, like json[b]_agg()</li>
 <li>JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object, like json[b]_object_agg()</li>
+</ul>
+<p>The SQL/JSON retrieval functions:</p>
+<ul>
+<li>JSON_VALUE - Extract an SQL value of a predefined type from a JSON value.</li>
+<li>JSON_QUERY - Extract a JSON text from a JSON text using an SQL/JSON path expression.</li>
+<li>JSON_TABLE - Query a JSON text and present it as a relational table.</li>
+<li>IS [NOT] JSON - test whether a string value is a JSON text.</li>
+<li>JSON_EXISTS - test whether a JSON path expression returns any SQL/JSON items</li>
 </ul>
 <h3 id="sqljson-conformance">SQL/JSON conformance</h3>
 <ul>
