@@ -110,7 +110,7 @@ DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p><code>jsonb @? jsonpath</code> and <code>jsonb @~ jsonpath</code> are as fast as <code>jsonb @&gt; jsonb</code>  (for equality operation),  but  jsonpath supports more complex expressions, for example:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house <span class="token keyword">WHERE</span>   js @<span class="token operator">~</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH")  &gt; "1945-03-09".datetime()'</span><span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">FROM</span> house <span class="token keyword">WHERE</span>   js @<span class="token operator">~</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy")  &gt; "1945-03-09".datetime()'</span><span class="token punctuation">;</span>
  count
 <span class="token comment">-------</span>
      <span class="token number">1</span>
@@ -123,7 +123,7 @@ DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER
 The results is depends on the size of the resulted SQL/JSON sequence:<br>
 –  empty sequence - returns SQL NULL;<br>
 – single item - returns the item;<br>
-– more items - returns array of items.<br>
+– more items - returns an array of items.<br>
 Notice, that this  behaviour differs from <code>WITH CONDITIONAL WRAPPER</code>, since the latter wraps into array a single scalar value, but not the single object or an array.</li>
 </ul>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> js @<span class="token operator">*</span>  <span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
@@ -271,20 +271,19 @@ json_value
 <span class="token comment">------------------------</span>
  time without time zone
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-<span class="token comment">-- all datetime examples are obtained with timezone 'W-SU'</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH","+3") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?           
 <span class="token comment">-----------------------------</span>
  <span class="token string">"1957-10-04T19:28:34+00:00"</span>
  <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- datetime cannot compared to string</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss") ? (@ &lt; "2000-01-01")'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
  ?<span class="token keyword">column</span>? 
 <span class="token comment">----------</span>
 <span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- rejected items in previous query</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? ((@ &lt; "2000-01-01") is unknown)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss") ? ((@ &lt; "2000-01-01") is unknown)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?           
 <span class="token comment">-----------------------------</span>
  <span class="token string">"2015-02-01T00:00:00+00:00"</span>
@@ -292,18 +291,11 @@ json_value
  <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- </span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------</span>
  <span class="token string">"2015-02-01T00:00:00+03:00"</span>
  <span class="token string">"1961-04-12T09:07:00+03:00"</span>
-<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-<span class="token comment">-- set timezone = 'UTC';</span>
-<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
-          ?<span class="token keyword">column</span>?
-<span class="token comment">-----------------------------</span>
- <span class="token string">"2015-02-01T00:00:00+00:00"</span>
- <span class="token string">"1961-04-12T06:07:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
    ?<span class="token keyword">column</span>?
@@ -461,6 +453,14 @@ json_query
  {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
+<h3 id="sqljson-functions">SQL/JSON functions</h3>
+<p>The SQL/JSON construction functions (mostly the same as json[b] construction functions ):</p>
+<ul>
+<li>JSON_OBJECT -  construct a JSON[b] object, like json[b]_build_object()</li>
+<li>JSON_ARRAY -  construct a JSON[b] array, like json[b]_build_array()</li>
+<li>JSON_ARRAYAGG -  aggregates values as JSON[b] array, like json[b]_agg()</li>
+<li>JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object, like json[b]_object_agg()</li>
+</ul>
 <h3 id="sqljson-conformance">SQL/JSON conformance</h3>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
