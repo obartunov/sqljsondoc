@@ -457,10 +457,10 @@ json_query
 <h3 id="introduction-to-sqljson-functions">Introduction to SQL/JSON functions</h3>
 <p>The SQL/JSON construction functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. They are mostly the same as corresponding json[b] construction functions.</p>
 <ul>
-<li>JSON_OBJECT -  construct a JSON[b] object, like json[b]_build_object()</li>
-<li>JSON_ARRAY -  construct a JSON[b] array, like json[b]_build_array()</li>
-<li>JSON_ARRAYAGG -  aggregates values as JSON[b] array, like json[b]_agg()</li>
-<li>JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object, like json[b]_object_agg()</li>
+<li>JSON_OBJECT -  construct a JSON[b] object</li>
+<li>JSON_ARRAY -  construct a JSON[b] array</li>
+<li>JSON_ARRAYAGG -  aggregates values as JSON[b] array</li>
+<li>JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object</li>
 </ul>
 <p>The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.</p>
 <ul>
