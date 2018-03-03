@@ -492,7 +492,34 @@ json_value_expression ::=
 <li>ability to omit keys with NULL values: {ABSENT|NULL} ON NULL</li>
 </ul>
 <p>Examples:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'area'</span> : <span class="token number">20</span> <span class="token operator">+</span> <span class="token number">30</span><span class="token punctuation">,</span> <span class="token string">'rooms'</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'no'</span>: <span class="token number">5</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> apt<span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'a'</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">'a'</span>: <span class="token number">2</span> <span class="token keyword">WITH</span> <span class="token keyword">UNIQUE</span> <span class="token keyword">KEYS</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ERROR: duplicate JSON <span class="token keyword">key</span> <span class="token string">"a"</span>
+
+<span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'a'</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">'a'</span>: <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      ?<span class="token keyword">column</span>?      
+<span class="token comment">--------------------</span>
+ {<span class="token string">"a"</span> : <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"a"</span> : <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'a'</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">'a'</span>: <span class="token number">2</span> RETURNING jsonb<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?      
+<span class="token comment">----------</span>
+ {<span class="token string">"a"</span>: <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token comment">-- Omitting keys with NULL values (keys  are not allowed to be NULL):</span>
+<span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'a'</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">'b'</span>: <span class="token boolean">NULL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       ?<span class="token keyword">column</span>?        
+<span class="token comment">-----------------------</span>
+ {<span class="token string">"a"</span> : <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"b"</span> : <span class="token boolean">null</span>}
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'a'</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">'b'</span>: <span class="token boolean">NULL</span> ABSENT <span class="token keyword">ON</span> <span class="token boolean">NULL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?  
+<span class="token comment">-----------</span>
+ {<span class="token string">"a"</span> : <span class="token number">1</span>}
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'area'</span> : <span class="token number">20</span> <span class="token operator">+</span> <span class="token number">30</span><span class="token punctuation">,</span> <span class="token string">'rooms'</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'no'</span>: <span class="token number">5</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> apt<span class="token punctuation">;</span>
                  apt                  
 <span class="token comment">--------------------------------------</span>
  {<span class="token string">"area"</span> : <span class="token number">50</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"no"</span> : <span class="token number">5</span>}
@@ -523,15 +550,122 @@ ERROR:  duplicate JSON <span class="token keyword">key</span> <span class="token
 ERROR:  duplicate JSON <span class="token keyword">key</span> <span class="token string">"area"</span>
 </code></pre>
 <h3 id="json_objectagg---aggregates-namevalue-pairs--as-jsonb-object">JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object</h3>
-<p>Syntax:</p>
+<p>JSON_OBJECTAGG is transformed into a json[b]_object_agg depending on RETURNING type.<br>
+Syntax:</p>
 <pre><code>JSON_OBJECTAGG (
   expression { VALUE | ':' } expression [ FORMAT JSON ]
   [ { NULL | ABSENT } ON NULL ]
   [ { WITH | WITHOUT } UNIQUE [ KEYS ] ]
   [ RETURNING data_type [ FORMAT JSON ] ]
 )
+</code></pre>
+<p>Options and RETURNING clause are the same as in JSON_OBJECT.</p>
+<p>Examples:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_OBJECTAGG<span class="token punctuation">(</span><span class="token string">'key'</span> <span class="token operator">||</span> i : <span class="token string">'val'</span> <span class="token operator">||</span>  i<span class="token punctuation">)</span>
+   <span class="token keyword">FROM</span> generate_series<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span> i<span class="token punctuation">;</span>
+                       ?<span class="token keyword">column</span>?
+<span class="token comment">-------------------------------------------------------</span>
+ { <span class="token string">"key1"</span> : <span class="token string">"val1"</span><span class="token punctuation">,</span> <span class="token string">"key2"</span> : <span class="token string">"val2"</span><span class="token punctuation">,</span> <span class="token string">"key3"</span> : <span class="token string">"val3"</span> }
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 
-Options and RETURNING clause are the same as in JSON_OBJECT.
+<span class="token keyword">SELECT</span> JSON_OBJECTAGG<span class="token punctuation">(</span>k: v ABSENT <span class="token keyword">ON</span> <span class="token boolean">NULL</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> apt
+<span class="token keyword">FROM</span> <span class="token punctuation">(</span><span class="token keyword">VALUES</span> <span class="token punctuation">(</span><span class="token string">'no'</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'area'</span><span class="token punctuation">,</span> <span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'rooms'</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'foo'</span><span class="token punctuation">,</span> <span class="token boolean">NULL</span><span class="token punctuation">)</span><span class="token punctuation">)</span> kv<span class="token punctuation">(</span>k<span class="token punctuation">,</span> v<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                  apt
+<span class="token comment">----------------------------------------</span>
+ { <span class="token string">"no"</span> : <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">50</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span> }
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="json_array---construct-a-jsonb-array">JSON_ARRAY - construct a JSON[b] array</h3>
+<p>Internally transformed into a json[b]_build_array() call.<br>
+Syntax:</p>
+<pre><code>JSON_ARRAY (
+  [ { expression [ FORMAT JSON ] }[, ...] ]
+  [ { NULL | ABSENT } ON NULL ]
+  [ RETURNING data_type [ FORMAT JSON ] ]
+)
+
+JSON_ARRAY (
+  query_expression
+  [ RETURNING data_type [ FORMAT JSON ] ]
+)
+</code></pre>
+<p>Options and RETURNING clause are the same as in JSON_OBJECT.<br>
+Note: ON NULL clause is not supported in subquery variant.</p>
+<p>Examples:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_ARRAY<span class="token punctuation">(</span><span class="token string">'string'</span><span class="token punctuation">,</span> <span class="token number">123</span><span class="token punctuation">,</span> <span class="token boolean">TRUE</span><span class="token punctuation">,</span> ARRAY<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token string">'{"a": 1}'</span>::jsonb<span class="token punctuation">,</span> <span class="token string">'[1, {"c": 3}]'</span> FORMAT JSON
+<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                       ?<span class="token keyword">column</span>?
+<span class="token comment">-----------------------------------------------------------</span>
+ <span class="token punctuation">[</span><span class="token string">"string"</span><span class="token punctuation">,</span> <span class="token number">123</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">,</span> {<span class="token string">"a"</span>: <span class="token number">1</span>}<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> {<span class="token string">"c"</span>: <span class="token number">3</span>}<span class="token punctuation">]</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> JSON_ARRAY<span class="token punctuation">(</span><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> generate_series<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?  
+<span class="token comment">-----------</span>
+ <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> JSON_ARRAY<span class="token punctuation">(</span>
+  json <span class="token string">'{ "no": 1, "area": 40, "rooms": 1 }'</span><span class="token punctuation">,</span>
+  JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'no'</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">'area'</span>: <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">'rooms'</span>: <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+  JSON_OBJECT<span class="token punctuation">(</span><span class="token string">'no'</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'area'</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">'rooms'</span>: <span class="token number">3</span> RETURNING <span class="token keyword">text</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span> <span class="token keyword">AS</span> apts<span class="token punctuation">;</span>
+                                                            apts                                                             
+<span class="token comment">-----------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token punctuation">[</span>{ <span class="token string">"no"</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">1</span> }<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span>}<span class="token punctuation">,</span> <span class="token string">"{\"no\" : 2, \"area\" : 80, \"rooms\" : 3}"</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="json_arrayagg---aggregates-values-as-jsonb-array">JSON_ARRAYAGG - aggregates values as JSON[b] array</h3>
+<p>Internally transformed into a json[b]_agg() call.<br>
+Syntax:</p>
+<pre><code>JSON_ARRAYAGG (
+  expression [ FORMAT JSON ]
+  [ { NULL | ABSENT } ON NULL ]
+  [ RETURNING data_type [ FORMAT JSON ] ]
+)
+</code></pre>
+<p>Examples:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_ARRAYAGG<span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token keyword">FROM</span> generate_series<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span> i<span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?  
+<span class="token comment">-----------</span>
+ <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span>
+  JSON_OBJECT<span class="token punctuation">(</span>
+    <span class="token string">'level'</span>: level<span class="token punctuation">,</span>
+    <span class="token string">'apt'</span>: JSON_ARRAYAGG<span class="token punctuation">(</span>
+      JSON_OBJECT<span class="token punctuation">(</span>
+        <span class="token string">'no'</span>: <span class="token keyword">no</span><span class="token punctuation">,</span>
+        <span class="token string">'area'</span>: area<span class="token punctuation">,</span>
+        <span class="token string">'rooms'</span>: rooms
+      <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">AS</span> floor
+<span class="token keyword">FROM</span> house_apt
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> level<span class="token punctuation">;</span>
+                                                                   floor                                                                    
+<span class="token comment">---------------------------------------------------------------------------------------------------------------------------------------------</span>
+ {<span class="token string">"level"</span> : <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"apt"</span> : <span class="token punctuation">[</span>{<span class="token string">"no"</span> : <span class="token number">4</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">100</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span>}<span class="token punctuation">]</span>}
+ {<span class="token string">"level"</span> : <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"apt"</span> : <span class="token punctuation">[</span>{<span class="token string">"no"</span> : <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">1</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span>}<span class="token punctuation">]</span>}
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- ABSENT ON NULL by default</span>
+<span class="token keyword">SELECT</span> JSON_ARRAYAGG<span class="token punctuation">(</span>area<span class="token punctuation">)</span> <span class="token keyword">AS</span> areas
+<span class="token keyword">FROM</span> house_apt<span class="token punctuation">;</span>
+       areas       
+<span class="token comment">-------------------</span>
+ <span class="token punctuation">[</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">80</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">60</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- NULL ON NULL</span>
+<span class="token keyword">SELECT</span> JSON_ARRAYAGG<span class="token punctuation">(</span>area <span class="token boolean">NULL</span> <span class="token keyword">ON</span> <span class="token boolean">NULL</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> areas
+<span class="token keyword">FROM</span> house_apt<span class="token punctuation">;</span>
+          areas          
+<span class="token comment">-------------------------</span>
+ <span class="token punctuation">[</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">80</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">60</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
 </code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
