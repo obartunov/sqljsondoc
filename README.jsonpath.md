@@ -462,7 +462,7 @@ json_query
 <li>JSON_ARRAYAGG -  aggregates values as JSON[b] array</li>
 <li>JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object</li>
 </ul>
-<p>The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.</p>
+<p>The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.  The SQL/JSON query functions all need a path specification, the JSON value to be input to that path specification for querying and processing, and optional parameter values passed to the path specification.</p>
 <ul>
 <li>JSON_VALUE - Extract an SQL value of a predefined type from a JSON value.</li>
 <li>JSON_QUERY - Extract a JSON text from a JSON text using an SQL/JSON path expression.</li>
@@ -480,8 +480,7 @@ Syntax:</p>
   [ RETURNING data_type [ FORMAT JSON ] ]
 )
 
-json_value_expression ::=
-	expression [ FORMAT JSON ]
+json_value_expression ::= expression [ FORMAT JSON ]
 </code></pre>
 <ul>
 <li>RETURNING type:<br>
