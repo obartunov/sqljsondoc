@@ -470,6 +470,17 @@ json_query
 <li>IS [NOT] JSON - test whether a string value is a JSON text.</li>
 <li>JSON_EXISTS - test whether a JSON path expression returns any SQL/JSON items</li>
 </ul>
+<h3 id="common-syntax-elements">Common syntax elements:</h3>
+<p>json_value_expression ::=<br>
+expression [ FORMAT json_representation ]<br>
+json_representation ::=<br>
+JSON [ ENCODING { UTF8 | UTF16 | UTF32 } ] | JSONB<br>
+json_output_clause ::=<br>
+RETURNING data_type [ FORMAT json_representation ]<br>
+json_api_common_syntax ::=<br>
+json_value_expression , json_path_specification<br>
+[ PASSING { json_value_expression AS identifier }[,…] 	]<br>
+json_path_specification ::= character_string_literal</p>
 <h3 id="json_object---construct-a-jsonb-object">JSON_OBJECT - construct a JSON[b] object</h3>
 <p>Internally transformed into a json[b]_build_object call.<br>
 Syntax:</p>
@@ -666,6 +677,21 @@ Syntax:</p>
  <span class="token punctuation">[</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">80</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">60</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 
+</code></pre>
+<h3 id="json_value---extract-an-sql-value-of-a-predefined-type-from-a-json-value">JSON_VALUE - Extract an SQL value of a predefined type from a JSON value</h3>
+<pre><code>JSON_VALUE (
+  json_api_common_syntax
+  [ RETURNING data_type ]
+  [ { ERROR | NULL | DEFAULT expression } ON EMPTY ]
+  [ { ERROR | NULL | DEFAULT expression } ON ERROR ]
+)
+</code></pre>
+<p>Examples:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- Only singleton scalars are allowed here for returning:</span>
+<span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'[1]'</span><span class="token punctuation">,</span> <span class="token string">'strict $'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ERROR: SQL<span class="token operator">/</span>JSON scalar required
+<span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'[1,2]'</span><span class="token punctuation">,</span> <span class="token string">'strict $[*]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ERROR: more than one SQL<span class="token operator">/</span>JSON item
 </code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
