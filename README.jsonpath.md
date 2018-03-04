@@ -471,16 +471,17 @@ json_query
 <li>JSON_EXISTS - test whether a JSON path expression returns any SQL/JSON items</li>
 </ul>
 <h3 id="common-syntax-elements">Common syntax elements:</h3>
-<p>json_value_expression ::=<br>
-expression [ FORMAT json_representation ]<br>
-json_representation ::=<br>
-JSON [ ENCODING { UTF8 | UTF16 | UTF32 } ] | JSONB<br>
-json_output_clause ::=<br>
-RETURNING data_type [ FORMAT json_representation ]<br>
-json_api_common_syntax ::=<br>
-json_value_expression , json_path_specification<br>
-[ PASSING { json_value_expression AS identifier }[,…] 	]<br>
-json_path_specification ::= jsonpath</p>
+<pre><code>json_value_expression ::=
+    expression [ FORMAT json_representation ]
+json_representation ::=
+	JSON [ ENCODING { UTF8 | UTF16 | UTF32 } ] | JSONB
+json_output_clause ::=
+	RETURNING data_type [ FORMAT json_representation ]
+json_api_common_syntax ::=
+	json_value_expression , json_path_specification
+	[ PASSING { json_value_expression AS identifier }[,...] 	]
+json_path_specification ::= jsonpath
+</code></pre>
 <p>Note:<br>
 The standard requires <code>character_string_literal</code> in json_path_specification.</p>
 <h3 id="json_object---construct-a-jsonb-object">JSON_OBJECT - construct a JSON[b] object</h3>
