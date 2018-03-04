@@ -484,10 +484,10 @@ json_path_specification ::= jsonpath
 </code></pre>
 <p>Note:</p>
 <ul>
-<li>The standard requires <code>character_string_literal</code> in json_path_specification.</li>
 <li>Only UTF8 encoding supported</li>
-<li>data_type could be on of json (default), jsonb, text, 	bytea</li>
+<li>data_type could be one  of json (default), jsonb, text, 	bytea</li>
 <li>json_representation could be only <code>json</code>, so FORMAT is implemented only for the standard compatibility.</li>
+<li>The standard requires <code>character_string_literal</code> in json_path_specification,  PostgreSQL extends json_path_specification to a separate data type <code>jsonpath</code>.</li>
 </ul>
 <h3 id="error-handling">Error handling</h3>
 <p>Since SQL standard describes using  strings for JSON  data and not<br>
