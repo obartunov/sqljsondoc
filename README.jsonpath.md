@@ -474,7 +474,7 @@ json_query
 <pre><code>json_value_expression ::=
     expression [ FORMAT json_representation ]
 json_representation ::=
-	JSON [ ENCODING { UTF8 | UTF16 | UTF32 } ] | JSONB
+	JSON [ ENCODING { UTF8 | UTF16 | UTF32 } ]
 json_output_clause ::=
 	RETURNING data_type [ FORMAT json_representation ]
 json_api_common_syntax ::=
@@ -482,8 +482,13 @@ json_api_common_syntax ::=
 	[ PASSING { json_value_expression AS identifier }[,...] 	]
 json_path_specification ::= jsonpath
 </code></pre>
-<p>Note:<br>
-The standard requires <code>character_string_literal</code> in json_path_specification.</p>
+<p>Note:</p>
+<ul>
+<li>The standard requires <code>character_string_literal</code> in json_path_specification.</li>
+<li>Only UTF8 encoding supported</li>
+<li>data_type could be on of json (default), jsonb, text, 	bytea</li>
+<li>json_representation could be only <code>json</code>, so FORMAT is implemented only for the standard compatibility.</li>
+</ul>
 <h3 id="error-handling">Error handling</h3>
 <p>Since SQL standard describes using  strings for JSON  data and not<br>
 data type, parsing errors occurs not when casting string into the JSON type,<br>
