@@ -468,7 +468,7 @@ json_query
 <li>JSON_QUERY - Extract a JSON text from a JSON text using an SQL/JSON path expression.</li>
 <li>JSON_TABLE - Query a JSON text and present it as a relational table.</li>
 <li>IS [NOT] JSON - test whether a string value is a JSON text.</li>
-<li>JSON_EXISTS - test whether a JSON path expression returns any SQL/JSON items</li>
+<li>JSON_EXISTS - determines whether a JSON value satisfies a search criterion.</li>
 </ul>
 <h3 id="common-syntax-elements">Common syntax elements:</h3>
 <pre><code>json_value_expression ::=
@@ -484,6 +484,10 @@ json_path_specification ::= jsonpath
 </code></pre>
 <p>Note:<br>
 The standard requires <code>character_string_literal</code> in json_path_specification.</p>
+<h3 id="error-handling">Error handling</h3>
+<p>Since SQL standard describes using  strings for JSON  data and not<br>
+data type, parsing errors occurs not when casting string into the JSON type,<br>
+so all corresponding SQL/JSON functions have special <strong>on error</strong>  clause, which specifies SQL/JSON function error behavior.</p>
 <h3 id="json_object---construct-a-jsonb-object">JSON_OBJECT - construct a JSON[b] object</h3>
 <p>Internally transformed into a json[b]_build_object call.<br>
 Syntax:</p>
@@ -679,9 +683,36 @@ Syntax:</p>
 <span class="token comment">-------------------------</span>
  <span class="token punctuation">[</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">80</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">60</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-
 </code></pre>
-<h3 id="json_value---extract-an-sql-value-of-a-predefined-type-from-a-json-value">JSON_VALUE - Extract an SQL value of a predefined type from a JSON value</h3>
+<h3 id="json_exists---determines-whether-a-json-value-satisfies-a-search-criterion">JSON_EXISTS - determines whether a JSON value satisfies a search criterion</h3>
+<p>Syntax:</p>
+<pre><code>JSON_EXISTS (
+	json_api_common_syntax
+	[ { TRUE | FALSE | UNKNOWN | ERROR } ON ERROR ]
+)
+</code></pre>
+<p>Examples:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- analogous to jsonb '{"a": 1}' ? 'a'</span>
+<span class="token keyword">SELECT</span> JSON_EXISTS<span class="token punctuation">(</span>jsonb <span class="token string">'{"a": 1}'</span><span class="token punctuation">,</span> <span class="token string">'strict $.a'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_exists
+<span class="token comment">-------------</span>
+ t
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span> JSON_EXISTS<span class="token punctuation">(</span>jsonb <span class="token string">'{"a": [1,2,3]}'</span><span class="token punctuation">,</span> <span class="token string">'strict $.a[*] ? (@ &gt; 2)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_exists
+<span class="token comment">-------------</span>
+ t
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token comment">-- Error behavior (FALSE by default)</span>
+<span class="token keyword">SELECT</span> JSON_EXISTS<span class="token punctuation">(</span>jsonb <span class="token string">'{"a": [1,2,3]}'</span><span class="token punctuation">,</span> <span class="token string">'strict $.a[5]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ERROR: Invalid SQL<span class="token operator">/</span>JSON subscript
+<span class="token keyword">SELECT</span> JSON_EXISTS<span class="token punctuation">(</span>jsonb <span class="token string">'{"a": [1,2,3]}'</span><span class="token punctuation">,</span> <span class="token string">'lax $.a[5]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_exists
+<span class="token comment">-------------</span>
+ <span class="token number">f</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="json_value---extract-an-sql-value-of-a-predefined-type-from-a-json-value">JSON_VALUE - extract an SQL value of a predefined type from a JSON value</h3>
 <pre><code>JSON_VALUE (
   json_api_common_syntax
   [ RETURNING data_type ]
