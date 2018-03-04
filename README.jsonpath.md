@@ -76,7 +76,7 @@
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h2 id="jsonpath-in-postgresql">JSONPATH in PostgreSQL</h2>
-<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  Path expression is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path. <em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.</p>
+<p>In PostgreSQL the SQL/JSON path language is implemented as  <strong>JSONPATH</strong>  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  <strong>Path expression</strong> is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (<em>PostgreSQL extension</em>) expression on the path. <em>Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )</em>.</p>
 <p>Examples of vaild jsonpath:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor'</span>
 <span class="token string">'($+1)'</span>
@@ -480,7 +480,9 @@ RETURNING data_type [ FORMAT json_representation ]<br>
 json_api_common_syntax ::=<br>
 json_value_expression , json_path_specification<br>
 [ PASSING { json_value_expression AS identifier }[,…] 	]<br>
-json_path_specification ::= character_string_literal</p>
+json_path_specification ::= jsonpath</p>
+<p>Note:<br>
+The standard requires <code>character_string_literal</code> in json_path_specification.</p>
 <h3 id="json_object---construct-a-jsonb-object">JSON_OBJECT - construct a JSON[b] object</h3>
 <p>Internally transformed into a json[b]_build_object call.<br>
 Syntax:</p>
