@@ -685,11 +685,14 @@ Syntax:</p>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="json_exists---determines-whether-a-json-value-satisfies-a-search-criterion">JSON_EXISTS - determines whether a JSON value satisfies a search criterion</h3>
+<p>JSON_EXISTS is a predicate, that can be used to  test whether an SQL/JSON path expression finds one or more  SQL/JSON items.</p>
 <p>Syntax:</p>
 <pre><code>JSON_EXISTS (
 	json_api_common_syntax
 	[ { TRUE | FALSE | UNKNOWN | ERROR } ON ERROR ]
 )
+
+Default is FALSE ON ERROR.
 </code></pre>
 <p>Examples:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- analogous to jsonb '{"a": 1}' ? 'a'</span>
