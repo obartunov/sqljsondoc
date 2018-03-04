@@ -696,6 +696,42 @@ ERROR: SQL<span class="token operator">/</span>JSON scalar required
 <span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'[1,2]'</span><span class="token punctuation">,</span> <span class="token string">'strict $[*]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
 ERROR: more than one SQL<span class="token operator">/</span>JSON item
 </code></pre>
+<h3 id="json_query---extract-a-json-text-from-a-json-text-using-an-sqljson-path-expression">JSON_QUERY - extract a JSON text from a JSON text using an SQL/JSON path expression</h3>
+<p>Syntax:</p>
+<pre><code>JSON_QUERY (
+	json_api_common_syntax
+	[ RETURNING data_type [ FORMAT json_representation ] ]
+	[ { WITHOUT | WITH { CONDITIONAL | [UNCONDITIONAL] } }
+	[ ARRAY ] WRAPPER ]
+	[ { KEEP | OMIT } QUOTES [ ON SCALAR STRING ] ]
+	[ { ERROR | NULL | EMPTY { ARRAY | OBJECT } } ON EMPTY ]
+	[ { ERROR | NULL | EMPTY { ARRAY | OBJECT } } ON ERROR ]
+)
+</code></pre>
+<p>Wrapper behavior (WITHOUT by default):</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+    js<span class="token punctuation">,</span>
+    JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'lax $[*]'</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token string">"without"</span><span class="token punctuation">,</span>
+    JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'lax $[*]'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span>  <span class="token keyword">AS</span> <span class="token string">"with uncond"</span><span class="token punctuation">,</span>
+    JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'lax $[*]'</span> <span class="token keyword">WITH</span> CONDITIONAL WRAPPER<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token string">"with cond"</span>
+<span class="token keyword">FROM</span>
+    <span class="token punctuation">(</span><span class="token keyword">VALUES</span> <span class="token punctuation">(</span>jsonb <span class="token string">'[]'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'[1]'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'[[1,2,3]]'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>  <span class="token punctuation">(</span><span class="token string">'[{"a": 1}]'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'[1, null, "2"]'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> foo<span class="token punctuation">(</span>js<span class="token punctuation">)</span><span class="token punctuation">;</span>
+       js       <span class="token operator">|</span>  without  <span class="token operator">|</span>  <span class="token keyword">with</span> uncond   <span class="token operator">|</span>   <span class="token keyword">with</span> cond
+<span class="token comment">----------------+-----------+----------------+----------------</span>
+ <span class="token punctuation">[</span><span class="token punctuation">]</span>             <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>    <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>         <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>            <span class="token operator">|</span> <span class="token number">1</span>         <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>            <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+ <span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">]</span>    <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span> <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">]</span>    <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
+ <span class="token punctuation">[</span>{<span class="token string">"a"</span>: <span class="token number">1</span>}<span class="token punctuation">]</span>     <span class="token operator">|</span> {<span class="token string">"a"</span>: <span class="token number">1</span>}  <span class="token operator">|</span> <span class="token punctuation">[</span>{<span class="token string">"a"</span>: <span class="token number">1</span>}<span class="token punctuation">]</span>     <span class="token operator">|</span> {<span class="token string">"a"</span>: <span class="token number">1</span>}
+ <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"2"</span><span class="token punctuation">]</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>    <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"2"</span><span class="token punctuation">]</span> <span class="token operator">|</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"2"</span><span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Quotes behavior (KEEP by default):</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span>jsonb <span class="token string">'"aaa"'</span><span class="token punctuation">,</span> <span class="token string">'strict $'</span> RETURNING <span class="token keyword">text</span> OMIT QUOTES<span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_query
+<span class="token comment">------------</span>
+ <span class="token number">aaa</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
@@ -707,6 +743,8 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <li>JSON_ARRAY(SELECT … (ABSENT|NULL) ON NULL …)</li>
 </ul>
 </li>
+<li>json_path_specification extends to be an expression of jsonpath type.</li>
+<li>The standard requires <code>character_string_literal</code>.</li>
 <li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
 <li>Use boolean  expression on the path, PostgreSQL extension</li>
 <li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
