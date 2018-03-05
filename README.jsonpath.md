@@ -853,8 +853,8 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <li>JSON_ARRAY(SELECT … (ABSENT|NULL) ON NULL …)</li>
 </ul>
 </li>
-<li>json_path_specification extends to be an expression of jsonpath type.</li>
-<li>The standard requires <code>character_string_literal</code>.</li>
+<li>json_path_specification extended  to be an expression of jsonpath type.<br>
+– The standard requires <code>character_string_literal</code>.</li>
 <li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
 <li>Use boolean  expression on the path, PostgreSQL extension</li>
 <li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
