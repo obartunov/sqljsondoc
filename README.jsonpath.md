@@ -84,6 +84,7 @@
 <span class="token comment">-- boolean predicate in path, extension</span>
 <span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
 <span class="token string">'$.floor[*].apt[*] ? (@.area == null).no'</span>
+<span class="token string">'$'</span> <span class="token operator">||</span> <span class="token string">'.'</span> <span class="token operator">||</span> <span class="token string">'a'</span>
 </code></pre>
 <p>Syntactical errors in jsonpath are reported</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token string">'$a. &gt;1'</span>::jsonpath<span class="token punctuation">;</span>
