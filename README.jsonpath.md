@@ -1112,6 +1112,29 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
      <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">60</span> <span class="token operator">|</span>     <span class="token number">2</span>
 <span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
+<p>Every path may be followed by a path name using an AS clause. Path names are identifiers and must be unique. Path names are used in the PLAN clause to express the desired output plan. Default plan is LEFT OUTER JOIN expressed as OUTER.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> lvl <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">AS</span> apt <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      <span class="token keyword">no</span> <span class="token keyword">int</span><span class="token punctuation">,</span>
+      area <span class="token keyword">float</span><span class="token punctuation">,</span>
+      rooms <span class="token keyword">int</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token punctuation">(</span>lvl <span class="token keyword">OUTER</span>  apt<span class="token punctuation">)</span> <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> <span class="token keyword">no</span> <span class="token operator">|</span>  area  <span class="token operator">|</span> rooms
+<span class="token comment">-------+----+--------+-------</span>
+     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">1</span> <span class="token operator">|</span>     <span class="token number">40</span> <span class="token operator">|</span>     <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">2</span> <span class="token operator">|</span>     <span class="token number">80</span> <span class="token operator">|</span>     <span class="token number">3</span>
+     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>     <span class="token number">2</span>
+     <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>    <span class="token number">100</span> <span class="token operator">|</span>     <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">60</span> <span class="token operator">|</span>     <span class="token number">2</span>
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+</code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
 <li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
