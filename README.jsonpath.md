@@ -259,7 +259,7 @@ json_value
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
-<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>).</dd>
+<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>).  PostgreSQL add supports conversion of UNIX epoch (double) to timestamptz.</dd>
 </dl>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
  json_value
@@ -297,10 +297,24 @@ json_value
  <span class="token string">"2015-02-01T00:00:00+03:00"</span>
  <span class="token string">"1961-04-12T09:07:00+03:00"</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy") ? (@ &gt; "1961-04-12".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
    ?<span class="token keyword">column</span>?
 <span class="token comment">--------------</span>
  <span class="token string">"2015-02-01"</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- UNIX epoch to timestamptz</span>
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'0'</span> @<span class="token operator">*</span> <span class="token string">'$.datetime().type()'</span><span class="token punctuation">;</span>
+          ?<span class="token keyword">column</span>?
+<span class="token comment">----------------------------</span>
+ <span class="token string">"timestamp with time zone"</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'0'</span> @<span class="token operator">*</span> <span class="token string">'$.datetime()'</span><span class="token punctuation">;</span>
+          ?<span class="token keyword">column</span>?
+<span class="token comment">-----------------------------</span>
+ <span class="token string">"1970-01-01T00:00:00+00:00"</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>~ <strong>keyvalue()</strong> - transforms json to an SQL/JSON sequence of objects with a known schema. Example:</p>
