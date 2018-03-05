@@ -84,7 +84,9 @@
 <span class="token comment">-- boolean predicate in path, extension</span>
 <span class="token string">'($.floor[*].apt[*].area &gt; 10)'</span>
 <span class="token string">'$.floor[*].apt[*] ? (@.area == null).no'</span>
-<span class="token string">'$'</span> <span class="token operator">||</span> <span class="token string">'.'</span> <span class="token operator">||</span> <span class="token string">'a'</span>
+</code></pre>
+<p>Jsonpath could be an expression.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$'</span> <span class="token operator">||</span> <span class="token string">'.'</span> <span class="token operator">||</span> <span class="token string">'a'</span>
 </code></pre>
 <p>Syntactical errors in jsonpath are reported</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> <span class="token string">'$a. &gt;1'</span>::jsonpath<span class="token punctuation">;</span>
@@ -783,6 +785,12 @@ Default is FALSE ON ERROR.
 <span class="token comment">-------------</span>
  t
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+<span class="token comment">--  Using non-constant JSOP path</span>
+<span class="token keyword">SELECT</span> JSON_EXISTS<span class="token punctuation">(</span>jsonb <span class="token string">'{"a": 123}'</span><span class="token punctuation">,</span> <span class="token string">'$'</span> <span class="token operator">||</span> <span class="token string">'.'</span> <span class="token operator">||</span> <span class="token string">'a'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ json_exists
+<span class="token comment">-------------</span>
+ t
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 <span class="token comment">-- Error behavior (FALSE by default)</span>
 <span class="token keyword">SELECT</span> JSON_EXISTS<span class="token punctuation">(</span>jsonb <span class="token string">'{"a": [1,2,3]}'</span><span class="token punctuation">,</span> <span class="token string">'strict $.a[5]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
 ERROR: Invalid SQL<span class="token operator">/</span>JSON subscript
@@ -842,6 +850,55 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <span class="token comment">------------</span>
  <span class="token number">aaa</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="json_table---query-a-json-text-and-present-it-as-a-relational-table">JSON_TABLE - query a JSON text and present it as a relational table</h3>
+<p>Syntax:</p>
+<pre><code>JSON_TABLE (
+json_api_common_syntax
+COLUMNS ( json_table_column [, ...] )
+[ PLAN ( json_table_plan ) |
+  PLAN DEFAULT ( json_table_default_plan_choices ) ]
+)
+
+json_table_column ::=
+    column_name FOR ORDINALITY
+
+    | column_name data_type
+		[ PATH json_path_specification ]
+		/* behavior are the same as in JSON_VALUE */
+		[ empty_behavior ON EMPTY ] 
+		[ error_behavior ON ERROR ]
+
+| column_name data_type FORMAT json_representation
+		[ PATH json_path_specification ]
+		/* behavior are the same as in JSON_QUERY */
+	    [ wrapper_behavior WRAPPER ]
+		[ quotes_behavior QUOTES [ ON SCALAR STRING ] ]
+		[ empty_behavior ON EMPTY ]
+		[ error_behavior ON ERROR ]
+		
+| NESTED PATH json_path_specification [ AS json_path_name ]
+		COLUMNS ( json_table_column [, ...] )
+json_table_default_plan_choices ::=
+      { INNER | OUTER } [ , { CROSS | UNION } ]
+	| { CROSS | UNION } [ , { INNER | OUTER } ]
+
+json_table_plan ::=
+	json_table_path_name
+	| json_table_plan_parent/child
+	| json_table_plan_sibling
+
+json_table_plan_parent/child ::=
+	  json_table_path_name OUTER json_table_plan_primary
+	| json_table_path_name INNER json_table_plan_primary
+
+json_table_plan_sibling ::=
+	  json_table_plan_primary { UNION json_table_plan_primary }[...]
+	| json_table_plan_primary { CROSS json_table_plan_primary }[...]
+
+json_table_plan_primary ::=
+		json_table_path_name | ( json_table_plan )
+
 </code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
