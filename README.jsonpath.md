@@ -900,6 +900,8 @@ json_table_plan_primary ::=
 		json_table_path_name | ( json_table_plan )
 </code></pre>
 <p>JSON_TABLE uses path expression (in <code>json_api_common_syntax</code>) to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</p>
+<p>The COLUMNS clause can define two kinds of columns: ordinality columns and regular columns. An ordinality column provides a sequential numbering of rows. Row numbering is 1-based.</p>
+<p>A regular column supports columns of scalar type. The column is produced using the semantics of JSON_VALUE. The column has an optional path expression, called the column pattern, which can be defaulted from the column name. The column pattern is used to search for the column within the current SQL/JSON item produced by the row pattern. The column also has optional ON EMPTY and ON ERROR clauses, with the same choices and semantics as JSON_VALUE.</p>
 <p>Examples:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- basic example: regular and formatted columns, paths</span>
 <span class="token keyword">SELECT</span>
