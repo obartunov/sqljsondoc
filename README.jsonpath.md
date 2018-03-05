@@ -900,7 +900,7 @@ json_table_plan_primary ::=
 		json_table_path_name | ( json_table_plan )
 </code></pre>
 <p>JSON_TABLE uses path expression (in <code>json_api_common_syntax</code>) to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</p>
-<p>The COLUMNS clause can define two kinds of columns: ordinality columns and regular columns. An ordinality column provides a sequential numbering of rows. Row numbering is 1-based.</p>
+<p>The COLUMNS clause can define several kinds of columns: ordinality columns, regular columns, formatted columns and nested columns .</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- basic example: regular and formatted columns, paths</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -916,9 +916,9 @@ json_table_plan_primary ::=
      <span class="token number">1</span> <span class="token operator">|</span>       <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">1</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
      <span class="token number">2</span> <span class="token operator">|</span>       <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">4</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">100</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-
-<span class="token comment">-- FOR ORDINALITY column, a sequential numbering of rows</span>
-<span class="token keyword">SELECT</span>
+</code></pre>
+<p>An ordinality column provides a sequential numbering of rows. Row numbering is 1-based.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
 <span class="token keyword">FROM</span>
   house<span class="token punctuation">,</span>
@@ -935,7 +935,8 @@ json_table_plan_primary ::=
   <span class="token number">4</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">2</span>
 <span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
-<p>A regular column supports columns of scalar type. The column is produced using the semantics of JSON_VALUE. The column has an <strong>optional</strong> path expression, called the column pattern, which can be defaulted from the column name. The column pattern is used to search for the column within the current SQL/JSON item produced by the row pattern. The column also has optional ON EMPTY and ON ERROR clauses, with the same choices and semantics as JSON_VALUE.</p>
+<p>A regular column supports columns of scalar type. The column is produced using the semantics of JSON_VALUE, so it is possible to specify all  behavior clauses of JSON_VALUE, for example,  an optional ON EMPTY and ON ERROR clauses.</p>
+<p>The column has an <strong>optional</strong> path expression, called the column pattern, which can be defaulted from the column name. The column pattern is used to search for the column within the current SQL/JSON item produced by the row pattern.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
 <span class="token keyword">FROM</span>
@@ -954,6 +955,141 @@ json_table_plan_primary ::=
   <span class="token number">5</span> <span class="token operator">|</span>  <span class="token number">0.6</span> <span class="token operator">|</span> number
 <span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 
+<span class="token comment">-- regular datetime columns</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.info.dates[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    str <span class="token keyword">text</span> PATH <span class="token string">'$'</span><span class="token punctuation">,</span>
+    dt <span class="token keyword">date</span> PATH <span class="token string">'$.datetime("DD-MM-YYYY")'</span><span class="token punctuation">,</span>
+    ts <span class="token keyword">timestamp</span> PATH <span class="token string">'$.datetime("DD-MM-YYYY HH24:MI:SS")'</span><span class="token punctuation">,</span>
+    tstz timestamptz PATH <span class="token string">'$.datetime("DD-MM-YYYY HH24:MI:SS TZH:TZM", "+03")'</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+           str           <span class="token operator">|</span>     dt     <span class="token operator">|</span>         ts          <span class="token operator">|</span>          tstz          
+<span class="token comment">-------------------------+------------+---------------------+------------------------</span>
+ <span class="token number">01</span><span class="token operator">-</span><span class="token number">02</span><span class="token operator">-</span><span class="token number">2015</span>              <span class="token operator">|</span> <span class="token number">2015</span><span class="token operator">-</span><span class="token number">02</span><span class="token operator">-</span><span class="token number">01</span> <span class="token operator">|</span> <span class="token number">2015</span><span class="token operator">-</span><span class="token number">02</span><span class="token operator">-</span><span class="token number">01</span> <span class="token number">00</span>:<span class="token number">00</span>:<span class="token number">00</span> <span class="token operator">|</span> <span class="token number">2015</span><span class="token operator">-</span><span class="token number">02</span><span class="token operator">-</span><span class="token number">01</span> <span class="token number">00</span>:<span class="token number">00</span>:<span class="token number">00</span><span class="token operator">+</span><span class="token number">03</span>
+ <span class="token number">04</span><span class="token operator">-</span><span class="token number">10</span><span class="token operator">-</span><span class="token number">1957</span> <span class="token number">19</span>:<span class="token number">28</span>:<span class="token number">34</span> <span class="token operator">+</span><span class="token number">00</span> <span class="token operator">|</span> <span class="token number">1957</span><span class="token operator">-</span><span class="token number">10</span><span class="token operator">-</span><span class="token number">04</span> <span class="token operator">|</span> <span class="token number">1957</span><span class="token operator">-</span><span class="token number">10</span><span class="token operator">-</span><span class="token number">04</span> <span class="token number">19</span>:<span class="token number">28</span>:<span class="token number">34</span> <span class="token operator">|</span> <span class="token number">1957</span><span class="token operator">-</span><span class="token number">10</span><span class="token operator">-</span><span class="token number">04</span> <span class="token number">22</span>:<span class="token number">28</span>:<span class="token number">34</span><span class="token operator">+</span><span class="token number">03</span>
+ <span class="token number">12</span><span class="token operator">-</span><span class="token number">04</span><span class="token operator">-</span><span class="token number">1961</span> <span class="token number">09</span>:<span class="token number">07</span>:<span class="token number">00</span> <span class="token operator">+</span><span class="token number">03</span> <span class="token operator">|</span> <span class="token number">1961</span><span class="token operator">-</span><span class="token number">04</span><span class="token operator">-</span><span class="token number">12</span> <span class="token operator">|</span> <span class="token number">1961</span><span class="token operator">-</span><span class="token number">04</span><span class="token operator">-</span><span class="token number">12</span> <span class="token number">09</span>:<span class="token number">07</span>:<span class="token number">00</span> <span class="token operator">|</span> <span class="token number">1961</span><span class="token operator">-</span><span class="token number">04</span><span class="token operator">-</span><span class="token number">12</span> <span class="token number">09</span>:<span class="token number">07</span>:<span class="token number">00</span><span class="token operator">+</span><span class="token number">03</span>
+<span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- regular columns: DEFAULT ON EMPTY behavior</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    area float4 PATH <span class="token string">'$.area ? (@ != null)'</span> <span class="token keyword">DEFAULT</span> <span class="token number">0</span> <span class="token keyword">ON</span> EMPTY    
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ area 
+<span class="token comment">------</span>
+   <span class="token number">40</span>
+   <span class="token number">80</span>
+    <span class="token number">0</span>
+  <span class="token number">100</span>
+   <span class="token number">60</span>
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- regular columns: ERROR ON EMPTY behavior</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    area float4 PATH <span class="token string">'$.area ? (@ != null)'</span> ERROR <span class="token keyword">ON</span> EMPTY ERROR <span class="token keyword">ON</span> ERROR
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ERROR:  <span class="token keyword">no SQL</span><span class="token operator">/</span>JSON item
+
+<span class="token comment">-- regular columns: DEFAULT ON ERROR behavior</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    area <span class="token keyword">text</span> PATH <span class="token string">'$.area * 100'</span> <span class="token keyword">DEFAULT</span> <span class="token string">'Unknown'</span> <span class="token keyword">ON</span> ERROR
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+  area   
+<span class="token comment">---------</span>
+ <span class="token number">4000</span>
+ <span class="token number">8000</span>
+ Unknown
+ <span class="token number">10000</span>
+ <span class="token number">6000</span>
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- JSON_TABLE ON ERROR behavior: EMPTY ON ERROR is by default</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'strict $.foo[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    bar <span class="token keyword">int</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ bar 
+<span class="token comment">-----</span>
+<span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- JSON_TABLE ON ERROR behavior: ERROR ON ERRROR</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'strict $.foo[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    bar <span class="token keyword">int</span>
+  <span class="token punctuation">)</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ERROR:  SQL<span class="token operator">/</span>JSON member <span class="token operator">not</span> found
+  
+<span class="token comment">-- JSON_TABLE ON ERROR behavior overrides default ON ERROR behavior of its columns</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    bar <span class="token keyword">int</span> PATH <span class="token string">'strict $.bar'</span> <span class="token comment">-- NULL ON ERROR is by default here</span>
+  <span class="token punctuation">)</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ERROR:  SQL<span class="token operator">/</span>JSON member <span class="token operator">not</span> found
+</code></pre>
+<p>Formatted columns are used for returning of composite SQL/JSON items, they internally transformed into JSON_QUERY,  so it is possible to specify all  behavior clauses of JSON_QUERY, for example,  an optional ON EMPTY and ON ERROR clauses.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    floor jsonb FORMAT JSON PATH <span class="token string">'$'</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+                                                              floor                                                               
+<span class="token comment">----------------------------------------------------------------------------------------------------------------------------------</span>
+ {<span class="token string">"apt"</span>: <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">1</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"level"</span>: <span class="token number">1</span>}
+ {<span class="token string">"apt"</span>: <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">4</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">100</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"level"</span>: <span class="token number">2</span>}
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- returning of composite JSON items without FORMAT JSON =&gt; error (NULL ON ERROR by default)</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    floor jsonb PATH <span class="token string">'$'</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ floor
+<span class="token comment">--------</span>
+ <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- returning of composite JSON items without FORMAT JSON =&gt; error (ERROR ON ERROR)</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    floor jsonb PATH <span class="token string">'$'</span>
+  <span class="token punctuation">)</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ERROR:  SQL<span class="token operator">/</span>JSON scalar required
+</code></pre>
+<p>The nested COLUMNS clause begins with the keyword NESTED, followed by a path and an optional path name. The path provides a refined context for the nested columns. The primary use of the path name is if the user wishes to specify an explicit plan. After the prolog to specify the path and path name, there is a COLUMNS clause, which has the same capabilities<br>
+already considered. The NESTED clause allows unnesting of (even deeply) nested JSON objects/arrays in one invocation rather than chaining several JSON_TABLE expressions in the SQL-statement.</p>
+<pre class=" language-sql"><code class="prism  language-sql">
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
 <span class="token keyword">FROM</span>
