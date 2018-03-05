@@ -720,6 +720,28 @@ Syntax:</p>
   {<span class="token string">"level"</span>:<span class="token number">1</span><span class="token punctuation">,</span><span class="token string">"no"</span>:<span class="token number">2</span><span class="token punctuation">,</span><span class="token string">"area"</span>:<span class="token number">80</span><span class="token punctuation">,</span><span class="token string">"rooms"</span>:<span class="token number">3</span>}<span class="token punctuation">,</span>  <span class="token operator">+</span>
   {<span class="token string">"level"</span>:<span class="token number">1</span><span class="token punctuation">,</span><span class="token string">"no"</span>:<span class="token number">3</span><span class="token punctuation">,</span><span class="token string">"area"</span>:<span class="token boolean">null</span><span class="token punctuation">,</span><span class="token string">"rooms"</span>:<span class="token number">2</span>}<span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- nested JSON_ARRAYAGG</span>
+﻿<span class="token keyword">SELECT</span>
+  JSON_ARRAYAGG<span class="token punctuation">(</span>floor<span class="token punctuation">)</span> <span class="token keyword">AS</span> floors
+<span class="token keyword">FROM</span> <span class="token punctuation">(</span>
+  <span class="token keyword">SELECT</span>
+    JSON_OBJECT<span class="token punctuation">(</span>
+      <span class="token string">'level'</span>: level<span class="token punctuation">,</span>
+      <span class="token string">'apt'</span>: JSON_ARRAYAGG<span class="token punctuation">(</span>
+        JSON_OBJECT<span class="token punctuation">(</span>
+          <span class="token string">'no'</span>: <span class="token keyword">no</span><span class="token punctuation">,</span>
+          <span class="token string">'area'</span>: area<span class="token punctuation">,</span>
+          <span class="token string">'rooms'</span>: rooms
+        <span class="token punctuation">)</span>
+      <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span> <span class="token keyword">AS</span> floor
+  <span class="token keyword">FROM</span> house_apt
+  <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> level
+<span class="token punctuation">)</span> floor<span class="token punctuation">;</span>
+                                                                                                                       floors
+<span class="token comment">-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</span>
+ <span class="token punctuation">[</span>{<span class="token string">"level"</span> : <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"apt"</span> : <span class="token punctuation">[</span>{<span class="token string">"no"</span> : <span class="token number">4</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">100</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span>}<span class="token punctuation">]</span>}<span class="token punctuation">,</span> {<span class="token string">"level"</span> : <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"apt"</span> : <span class="token punctuation">[</span>{<span class="token string">"no"</span> : <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">1</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span> : <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span> : <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span> : <span class="token number">2</span>}<span class="token punctuation">]</span>}<span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 
 </code></pre>
 <h3 id="json_exists---determines-whether-a-json-value-satisfies-a-search-criterion">JSON_EXISTS - determines whether a JSON value satisfies a search criterion</h3>
