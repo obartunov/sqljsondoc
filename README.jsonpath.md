@@ -490,9 +490,7 @@ json_path_specification ::= jsonpath
 <li>The standard requires <code>character_string_literal</code> in json_path_specification,  PostgreSQL extends json_path_specification to a separate data type <code>jsonpath</code>.</li>
 </ul>
 <h3 id="error-handling">Error handling</h3>
-<p>Since SQL standard describes using  strings for JSON  data and not<br>
-data type, parsing errors occurs not when casting string into the JSON type,<br>
-so all corresponding SQL/JSON functions have special <strong>on error</strong>  clause, which specifies SQL/JSON function error behavior.</p>
+<p>Since SQL standard describes using  strings for JSON  data and not  data type, parsing errors occurs not when casting string into the JSON type, so all corresponding SQL/JSON functions have special <strong>ON ERROR</strong>  clause, which specifies SQL/JSON function error behavior.</p>
 <h3 id="json_object---construct-a-jsonb-object">JSON_OBJECT - construct a JSON[b] object</h3>
 <p>Internally transformed into a json[b]_build_object call.<br>
 Syntax:</p>
@@ -653,7 +651,29 @@ Syntax:</p>
 <span class="token comment">-----------</span>
  <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-
+<span class="token comment">-- transform apt data into relational form</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> house_apt <span class="token keyword">AS</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      <span class="token keyword">no</span> <span class="token keyword">int</span><span class="token punctuation">,</span>
+      area <span class="token keyword">float</span><span class="token punctuation">,</span>
+      rooms <span class="token keyword">int</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> house_apt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> <span class="token keyword">no</span> <span class="token operator">|</span>  area  <span class="token operator">|</span> rooms 
+<span class="token comment">-------+----+--------+-------</span>
+     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">1</span> <span class="token operator">|</span>     <span class="token number">40</span> <span class="token operator">|</span>     <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">2</span> <span class="token operator">|</span>     <span class="token number">80</span> <span class="token operator">|</span>     <span class="token number">3</span>
+     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>     <span class="token number">2</span>
+     <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>    <span class="token number">100</span> <span class="token operator">|</span>     <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">60</span> <span class="token operator">|</span>     <span class="token number">2</span>
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token keyword">SELECT</span>
   JSON_OBJECT<span class="token punctuation">(</span>
     <span class="token string">'level'</span>: level<span class="token punctuation">,</span>
