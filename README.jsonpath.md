@@ -499,7 +499,7 @@ json_path_specification ::= jsonpath
 <p>Note:</p>
 <ul>
 <li>Only UTF8 encoding is supported</li>
-<li>data_type could be one  of json (default), jsonb, text,  bytea.  PostgreSQL extends the supported types to  records, arrays and domains.</li>
+<li>data_type in RETURNING could be one of json (default), jsonb, text,  bytea.  PostgreSQL extends the supported types to  records, arrays and domains.</li>
 <li>json_representation could be only <code>json</code>, so FORMAT is implemented only for the standard compatibility.</li>
 <li>The standard requires <code>character_string_literal</code> in json_path_specification,  PostgreSQL extends json_path_specification to a separate data type <code>jsonpath</code>.</li>
 </ul>
@@ -519,7 +519,6 @@ json_value_expression ::= expression [ FORMAT JSON ]
 </code></pre>
 <ul>
 <li>RETURNING type:<br>
-– one of json (default), jsonb, string type, bytea or having cast from json<br>
 – jsonb_build_object() is used for  RETURNING jsonb<br>
 – json_build_object() - for other types</li>
 <li>Key uniqueness check: {WITH|WITHOUT} UNIQUES [KEYS]</li>
