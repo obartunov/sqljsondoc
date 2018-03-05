@@ -1089,7 +1089,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
 </code></pre>
 <p>The nested COLUMNS clause begins with the keyword NESTED, followed by a path and an optional path name. The path provides a refined context for the nested columns. The primary use of the path name is if the user wishes to specify an explicit plan. After the prolog to specify the path and path name, there is a COLUMNS clause, which has the same capabilities<br>
 already considered. The NESTED clause allows unnesting of (even deeply) nested JSON objects/arrays in one invocation rather than chaining several JSON_TABLE expressions in the SQL-statement.</p>
-<pre class=" language-sql"><code class="prism  language-sql">
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- nested columns (1-level)</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
 <span class="token keyword">FROM</span>
