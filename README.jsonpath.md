@@ -901,8 +901,6 @@ json_table_plan_primary ::=
 </code></pre>
 <p>JSON_TABLE uses path expression (in <code>json_api_common_syntax</code>) to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</p>
 <p>The COLUMNS clause can define two kinds of columns: ordinality columns and regular columns. An ordinality column provides a sequential numbering of rows. Row numbering is 1-based.</p>
-<p>A regular column supports columns of scalar type. The column is produced using the semantics of JSON_VALUE. The column has an optional path expression, called the column pattern, which can be defaulted from the column name. The column pattern is used to search for the column within the current SQL/JSON item produced by the row pattern. The column also has optional ON EMPTY and ON ERROR clauses, with the same choices and semantics as JSON_VALUE.</p>
-<p>Examples:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- basic example: regular and formatted columns, paths</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -936,6 +934,25 @@ json_table_plan_primary ::=
   <span class="token number">3</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>     <span class="token number">3</span>
   <span class="token number">4</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">2</span>
 <span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
+<p>A regular column supports columns of scalar type. The column is produced using the semantics of JSON_VALUE. The column has an <strong>optional</strong> path expression, called the column pattern, which can be defaulted from the column name. The column pattern is used to search for the column within the current SQL/JSON item produced by the row pattern. The column also has optional ON EMPTY and ON ERROR clauses, with the same choices and semantics as JSON_VALUE.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">no</span> <span class="token keyword">int</span><span class="token punctuation">,</span>
+    area <span class="token keyword">float</span> PATH <span class="token string">'$.area / 100'</span><span class="token punctuation">,</span>
+    area_type <span class="token keyword">text</span> PATH <span class="token string">'$.area.type()'</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ <span class="token keyword">no</span> <span class="token operator">|</span> area <span class="token operator">|</span> area_type 
+<span class="token comment">----+------+-----------</span>
+  <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">0.4</span> <span class="token operator">|</span> number
+  <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">0.8</span> <span class="token operator">|</span> number
+  <span class="token number">3</span> <span class="token operator">|</span>      <span class="token operator">|</span> <span class="token boolean">null</span>
+  <span class="token number">4</span> <span class="token operator">|</span>    <span class="token number">1</span> <span class="token operator">|</span> number
+  <span class="token number">5</span> <span class="token operator">|</span>  <span class="token number">0.6</span> <span class="token operator">|</span> number
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
