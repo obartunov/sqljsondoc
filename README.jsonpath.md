@@ -898,10 +898,44 @@ json_table_plan_sibling ::=
 
 json_table_plan_primary ::=
 		json_table_path_name | ( json_table_plan )
-
 </code></pre>
+<p>JSON_TABLE uses path expression (in <code>json_api_common_syntax</code>) to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</p>
 <p>Examples:</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- basic example: regular and formatted columns, paths</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>     <span class="token comment">-- PATH 'lax $.level' is used here by default</span>
+    num_apt <span class="token keyword">int</span> PATH <span class="token string">'$.apt.size()'</span><span class="token punctuation">,</span> 
+    apts jsonb FORMAT JSON PATH <span class="token string">'$.apt'</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> num_apt <span class="token operator">|</span>                                                    apts                                                     
+<span class="token comment">-------+---------+-------------------------------------------------------------------------------------------------------------</span>
+     <span class="token number">1</span> <span class="token operator">|</span>       <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">40</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">1</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">80</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
+     <span class="token number">2</span> <span class="token operator">|</span>       <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">[</span>{<span class="token string">"no"</span>: <span class="token number">4</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">100</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">3</span>}<span class="token punctuation">,</span> {<span class="token string">"no"</span>: <span class="token number">5</span><span class="token punctuation">,</span> <span class="token string">"area"</span>: <span class="token number">60</span><span class="token punctuation">,</span> <span class="token string">"rooms"</span>: <span class="token number">2</span>}<span class="token punctuation">]</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- FOR ORDINALITY column, a sequential numbering of rows</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*].apt[*] ? (@.rooms &gt; 1)'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    id <span class="token keyword">FOR</span> ORDINALITY<span class="token punctuation">,</span>
+    <span class="token keyword">no</span> <span class="token keyword">int</span><span class="token punctuation">,</span>
+    rooms <span class="token keyword">int</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ id <span class="token operator">|</span> <span class="token keyword">no</span> <span class="token operator">|</span> rooms 
+<span class="token comment">----+----+-------</span>
+  <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">2</span> <span class="token operator">|</span>     <span class="token number">3</span>
+  <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">3</span> <span class="token operator">|</span>     <span class="token number">2</span>
+  <span class="token number">3</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>     <span class="token number">3</span>
+  <span class="token number">4</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">2</span>
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
 <span class="token keyword">FROM</span>
   house<span class="token punctuation">,</span>
