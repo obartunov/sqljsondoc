@@ -484,8 +484,8 @@ json_path_specification ::= jsonpath
 </code></pre>
 <p>Note:</p>
 <ul>
-<li>Only UTF8 encoding supported</li>
-<li>data_type could be one  of json (default), jsonb, text, 	bytea</li>
+<li>Only UTF8 encoding is supported</li>
+<li>data_type could be one  of json (default), jsonb, text,  bytea.  PostgreSQL extends the supported types to  records, arrays and domains.</li>
 <li>json_representation could be only <code>json</code>, so FORMAT is implemented only for the standard compatibility.</li>
 <li>The standard requires <code>character_string_literal</code> in json_path_specification,  PostgreSQL extends json_path_specification to a separate data type <code>jsonpath</code>.</li>
 </ul>
@@ -651,7 +651,8 @@ Syntax:</p>
 <span class="token comment">-----------</span>
  <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-<span class="token comment">-- transform apt data into relational form</span>
+
+<span class="token comment">-- transform json data into relational form</span>
 <span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> house_apt <span class="token keyword">AS</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -708,6 +709,7 @@ Syntax:</p>
 <span class="token comment">-------------------------</span>
  <span class="token punctuation">[</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">80</span><span class="token punctuation">,</span> <span class="token boolean">null</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">60</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- record type serializing</span>
 <span class="token keyword">SELECT</span> JSON_ARRAYAGG<span class="token punctuation">(</span>house_apt<span class="token punctuation">.</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> floor
 <span class="token keyword">FROM</span> house_apt
@@ -720,6 +722,7 @@ Syntax:</p>
   {<span class="token string">"level"</span>:<span class="token number">1</span><span class="token punctuation">,</span><span class="token string">"no"</span>:<span class="token number">2</span><span class="token punctuation">,</span><span class="token string">"area"</span>:<span class="token number">80</span><span class="token punctuation">,</span><span class="token string">"rooms"</span>:<span class="token number">3</span>}<span class="token punctuation">,</span>  <span class="token operator">+</span>
   {<span class="token string">"level"</span>:<span class="token number">1</span><span class="token punctuation">,</span><span class="token string">"no"</span>:<span class="token number">3</span><span class="token punctuation">,</span><span class="token string">"area"</span>:<span class="token boolean">null</span><span class="token punctuation">,</span><span class="token string">"rooms"</span>:<span class="token number">2</span>}<span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- nested JSON_ARRAYAGG</span>
 ﻿<span class="token keyword">SELECT</span>
   JSON_ARRAYAGG<span class="token punctuation">(</span>floor<span class="token punctuation">)</span> <span class="token keyword">AS</span> floors
