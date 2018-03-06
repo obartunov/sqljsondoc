@@ -1310,6 +1310,26 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- INNER, UNION</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.no &gt; 3)'</span> <span class="token keyword">AS</span> apt1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no1 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span>              <span class="token keyword">AS</span> apt2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">INNER</span><span class="token punctuation">,</span> <span class="token keyword">UNION</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span>  no1   <span class="token operator">|</span>  no2
+<span class="token comment">-------+--------+--------</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 <span class="token comment">-- OUTER, CROSS</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1427,7 +1447,7 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
 </code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
-<li><code>like_regex</code> supports posix regular expressions,  while standard requires xquery regexps.</li>
+<li><code>like_regex</code> supports posix regular expressions,  while the  standard requires xquery regexps.</li>
 <li>Not supported (due to unresolved conflicts in SQL grammar):
 <ul>
 <li>expr FORMAT JSON IS [NOT] JSON</li>
