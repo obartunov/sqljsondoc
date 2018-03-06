@@ -1176,18 +1176,18 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
       no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span>
     <span class="token punctuation">)</span>
   <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
- level <span class="token operator">|</span> no1 <span class="token operator">|</span> no2 
-<span class="token comment">-------+-----+-----</span>
-     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>    
-     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>    
-     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>    
-     <span class="token number">1</span> <span class="token operator">|</span>     <span class="token operator">|</span>   <span class="token number">1</span>
-     <span class="token number">1</span> <span class="token operator">|</span>     <span class="token operator">|</span>   <span class="token number">2</span>
-     <span class="token number">1</span> <span class="token operator">|</span>     <span class="token operator">|</span>   <span class="token number">3</span>
-     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>    
-     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>    
-     <span class="token number">2</span> <span class="token operator">|</span>     <span class="token operator">|</span>   <span class="token number">4</span>
-     <span class="token number">2</span> <span class="token operator">|</span>     <span class="token operator">|</span>   <span class="token number">5</span>
+ level <span class="token operator">|</span>  no1   <span class="token operator">|</span>  no2
+<span class="token comment">-------+--------+--------</span>
+     <span class="token number">1</span> <span class="token operator">|</span>      <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">1</span> <span class="token operator">|</span>      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">1</span> <span class="token operator">|</span>      <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">10</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 
 </code></pre>
