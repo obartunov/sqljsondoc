@@ -1115,27 +1115,37 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
 <p>Every path may be followed by a path name using an AS clause. Path names are identifiers and must be unique. Path names are used in the PLAN clause to express the desired output plan. PLAN clause could be INNER, OUTER, UNION and CROSS, which correspond to INNER JOIN, LEFT OUTER JOIN, FULL OUTER JOIN and CROSS JOIN respectively.  If there is an explicit PLAN clause, all path names must be explicit and appear in the PLAN clause exactly once.</p>
 <p>INNER and OUTER are used for parent/child relationship and it is mandatory to specify the first operand (path name in AS clause) and it must be an ancestor of all path names in the second operand.</p>
 <p>UNION expresses semantics of a FULL OUTER JOIN and is default with sibling relationship.</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- Default plan clause is  OUTER for parent/child relationship</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span>  <span class="token keyword">AS</span> lvl <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.area &gt; 1000)'</span> <span class="token keyword">AS</span> big <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      <span class="token keyword">no</span> <span class="token keyword">int</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token punctuation">(</span>lvl <span class="token keyword">OUTER</span> big<span class="token punctuation">)</span> <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span>   <span class="token keyword">no</span>
+<span class="token comment">-------+--------</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- Default plan clause is  OUTER for parent/child relationship</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
 <span class="token keyword">FROM</span>
   house<span class="token punctuation">,</span>
-  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> lvl <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
     level <span class="token keyword">int</span><span class="token punctuation">,</span>
-    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">AS</span> apt <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
-      <span class="token keyword">no</span> <span class="token keyword">int</span><span class="token punctuation">,</span>
-      area <span class="token keyword">float</span><span class="token punctuation">,</span>
-      rooms <span class="token keyword">int</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.area &gt; 1000)'</span> <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token comment">-- returns no items</span>
+      <span class="token keyword">no</span> <span class="token keyword">int</span>
     <span class="token punctuation">)</span>
-  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token punctuation">(</span>lvl <span class="token keyword">OUTER</span>  apt<span class="token punctuation">)</span> <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
- level <span class="token operator">|</span> <span class="token keyword">no</span> <span class="token operator">|</span>  area  <span class="token operator">|</span> rooms
-<span class="token comment">-------+----+--------+-------</span>
-     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">1</span> <span class="token operator">|</span>     <span class="token number">40</span> <span class="token operator">|</span>     <span class="token number">1</span>
-     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">2</span> <span class="token operator">|</span>     <span class="token number">80</span> <span class="token operator">|</span>     <span class="token number">3</span>
-     <span class="token number">1</span> <span class="token operator">|</span>  <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>     <span class="token number">2</span>
-     <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>    <span class="token number">100</span> <span class="token operator">|</span>     <span class="token number">3</span>
-     <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">60</span> <span class="token operator">|</span>     <span class="token number">2</span>
-<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span>   <span class="token keyword">no</span>
+<span class="token comment">-------+--------</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Example of nested columns (2-level).</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
@@ -1189,7 +1199,231 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">10</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
+<p>PLAN DEFAULT (INNER) is equivalent to explicit PLAN clause.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.area &gt; 1000)'</span> <span class="token keyword">AS</span> apt <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token comment">-- returns 0 items</span>
+      <span class="token keyword">no</span> <span class="token keyword">int</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">INNER</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> <span class="token keyword">no</span>
+<span class="token comment">-------+----</span>
+<span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.area &gt; 1000)'</span> <span class="token keyword">AS</span> apt <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token comment">-- returns 0 items</span>
+      <span class="token keyword">no</span> <span class="token keyword">int</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token punctuation">(</span>floor <span class="token keyword">INNER</span> apt<span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> <span class="token keyword">no</span>
+<span class="token comment">-------+----</span>
+<span class="token punctuation">(</span><span class="token number">0</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
+<p>PLAN DEFAULT (CROSS) is equivalent to explicit PLAN clause for sibling columns.</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">AS</span> apt1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      no1 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span>
+    <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">AS</span> apt2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">CROSS</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> no1 <span class="token operator">|</span> no2
+<span class="token comment">-------+-----+-----</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">3</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>   <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>   <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>   <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>   <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>   <span class="token number">5</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">13</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">AS</span> apt1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      no1 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span>
+    <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span> <span class="token keyword">AS</span> apt2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span>
+    <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token punctuation">(</span>floor <span class="token keyword">OUTER</span> <span class="token punctuation">(</span>apt1 <span class="token keyword">CROSS</span> apt2<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> no1 <span class="token operator">|</span> no2
+<span class="token comment">-------+-----+-----</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">3</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>   <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>   <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span>   <span class="token number">3</span> <span class="token operator">|</span>   <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>   <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>   <span class="token number">5</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">13</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Combination of OUTER/INNER and UNION/CROSS joins:</p>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- OUTER, UNION is the same as INNER, UNION</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.no &gt; 3)'</span> <span class="token keyword">AS</span> apt1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no1 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span>              <span class="token keyword">AS</span> apt2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">OUTER</span><span class="token punctuation">,</span> <span class="token keyword">UNION</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span>  no1   <span class="token operator">|</span>  no2
+<span class="token comment">-------+--------+--------</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">1</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">2</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">3</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- OUTER, CROSS</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.no &gt; 3)'</span> <span class="token keyword">AS</span> apt1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no1 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span>              <span class="token keyword">AS</span> apt2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">OUTER</span><span class="token punctuation">,</span> <span class="token keyword">CROSS</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span>  no1   <span class="token operator">|</span>  no2
+<span class="token comment">-------+--------+--------</span>
+     <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span>      <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span>      <span class="token number">5</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span>      <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span>      <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- INNER, CROSS</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  house<span class="token punctuation">,</span>
+  JSON_TABLE<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'$.floor[*]'</span> <span class="token keyword">AS</span> floor <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+    level <span class="token keyword">int</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*] ? (@.no &gt; 3)'</span> <span class="token keyword">AS</span> apt1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no1 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    NESTED PATH <span class="token string">'$.apt[*]'</span>              <span class="token keyword">AS</span> apt2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> no2 <span class="token keyword">int</span> PATH <span class="token string">'$.no'</span> <span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">INNER</span><span class="token punctuation">,</span> <span class="token keyword">CROSS</span><span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ level <span class="token operator">|</span> no1 <span class="token operator">|</span> no2
+<span class="token comment">-------+-----+-----</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>   <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">4</span> <span class="token operator">|</span>   <span class="token number">5</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">4</span>
+     <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">5</span>
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- OUTER, UNION</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  JSON_TABLE<span class="token punctuation">(</span><span class="token string">'[{"a": [1, 2], "n": 1}, {"a": [3, 4], "n": 2}, {"a": [], "n": 3}]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">AS</span> root
+    <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      n <span class="token keyword">int</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*] ? (@ &gt; 2)'</span> <span class="token keyword">AS</span> ap1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a1</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*]'</span>           <span class="token keyword">AS</span> ap2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a2</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">OUTER</span><span class="token punctuation">,</span> <span class="token keyword">UNION</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ n <span class="token operator">|</span>   <span class="token number">a1</span>   <span class="token operator">|</span>   <span class="token number">a2</span>
+<span class="token comment">---+--------+--------</span>
+ <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">1</span>
+ <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">2</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">3</span>
+ <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
+ <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- INNER, UNION</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  JSON_TABLE<span class="token punctuation">(</span><span class="token string">'[{"a": [1, 2], "n": 1}, {"a": [3, 4], "n": 2}, {"a": [], "n": 3}]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">AS</span> root
+    <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      n <span class="token keyword">int</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*] ? (@ &gt; 2)'</span> <span class="token keyword">AS</span> ap1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a1</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*]'</span>           <span class="token keyword">AS</span> ap2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a2</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">INNER</span><span class="token punctuation">,</span> <span class="token keyword">UNION</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ n <span class="token operator">|</span>   <span class="token number">a1</span>   <span class="token operator">|</span>   <span class="token number">a2</span>
+<span class="token comment">---+--------+--------</span>
+ <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">1</span>
+ <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">2</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">3</span>
+ <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
+<span class="token punctuation">(</span><span class="token number">6</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">--OUTER, CROSS</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  JSON_TABLE<span class="token punctuation">(</span><span class="token string">'[{"a": [1, 2], "n": 1}, {"a": [3, 4], "n": 2}, {"a": [], "n": 3}]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">AS</span> root
+    <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      n <span class="token keyword">int</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*] ? (@ &gt; 2)'</span> <span class="token keyword">AS</span> ap1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a1</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*]'</span>           <span class="token keyword">AS</span> ap2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a2</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">OUTER</span><span class="token punctuation">,</span> <span class="token keyword">CROSS</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ n <span class="token operator">|</span>   <span class="token number">a1</span>   <span class="token operator">|</span>   <span class="token number">a2</span>
+<span class="token comment">---+--------+--------</span>
+ <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">3</span> <span class="token operator">|</span>      <span class="token number">3</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">3</span> <span class="token operator">|</span>      <span class="token number">4</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span>      <span class="token number">3</span>
+ <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span>      <span class="token number">4</span>
+ <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
+<span class="token punctuation">(</span><span class="token number">6</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+<span class="token comment">-- INNER, CROSS</span>
+<span class="token keyword">SELECT</span>
+  jt<span class="token punctuation">.</span><span class="token operator">*</span>
+<span class="token keyword">FROM</span>
+  JSON_TABLE<span class="token punctuation">(</span><span class="token string">'[{"a": [1, 2], "n": 1}, {"a": [3, 4], "n": 2}, {"a": [], "n": 3}]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">AS</span> root
+    <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span>
+      n <span class="token keyword">int</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*] ? (@ &gt; 2)'</span> <span class="token keyword">AS</span> ap1 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a1</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span><span class="token punctuation">,</span>
+      NESTED PATH <span class="token string">'$.a[*]'</span>           <span class="token keyword">AS</span> ap2 <span class="token keyword">COLUMNS</span> <span class="token punctuation">(</span> <span class="token number">a2</span> <span class="token keyword">int</span> PATH <span class="token string">'$'</span> <span class="token punctuation">)</span>
+    <span class="token punctuation">)</span> <span class="token keyword">PLAN</span> <span class="token keyword">DEFAULT</span> <span class="token punctuation">(</span><span class="token keyword">INNER</span><span class="token punctuation">,</span> <span class="token keyword">CROSS</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+ n <span class="token operator">|</span> <span class="token number">a1</span> <span class="token operator">|</span> <span class="token number">a2</span>
+<span class="token comment">---+----+----</span>
+ <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">3</span> <span class="token operator">|</span>  <span class="token number">3</span>
+ <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">3</span> <span class="token operator">|</span>  <span class="token number">4</span>
+ <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>  <span class="token number">3</span>
+ <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>  <span class="token number">4</span>
+<span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <h2 id="sqljson-conformance">SQL/JSON conformance</h2>
 <ul>
