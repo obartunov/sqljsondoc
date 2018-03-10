@@ -262,7 +262,7 @@ json_value
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
-<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>) . Default template is ISO - “yyyy-dd-mm”.    Default timezone could be specified  in second argument of <strong>datetime()</strong> function, it applied  only if  template contains <strong>TZH</strong> and there is no 	timezone in input data. That helps to keep jsonpath operators and functions to be immutable and, hence, indexable.</dd>
+<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>) . Default template is ISO - “yyyy-dd-mm”.    Default timezone could be specified  as a second argument of <strong>datetime()</strong> function, it applied  only if  template contains <strong>TZH</strong> and there is no 	timezone in input data.  That helps to keep jsonpath operators and functions to be immutable and, hence, indexable.</dd>
 </dl>
 <p>PostgreSQL adds support of  conversion of UNIX epoch (double) to timestamptz.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -1467,10 +1467,10 @@ already considered. The NESTED clause allows unnesting of (even deeply) nested J
 <li>JSON_ARRAY(SELECT … (ABSENT|NULL) ON NULL …)</li>
 </ul>
 </li>
-<li>json_path_specification extended  to be an expression of jsonpath type.<br>
-– The standard requires <code>character_string_literal</code>.</li>
+<li>json_path_specification extended  to be an expression of jsonpath type. The standard requires  it <code>character_string_literal</code>.</li>
 <li>Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost</li>
 <li>Use boolean  expression on the path, PostgreSQL extension</li>
+<li>Default timezone added to <code>datetime()</code> as second argument. That helped to keep jsonpath operators and functions to be immutable.</li>
 <li><code>.**</code>  - recursive wildcard member accessor, PostgreSQL extension</li>
 <li>json[b] op jsonpath - PostgreSQL extension</li>
 <li>[path] - wrap SQL/JSON sequences into an array - PostgreSQL extension</li>
