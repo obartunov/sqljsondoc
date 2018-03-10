@@ -262,7 +262,7 @@ json_value
 <dd><strong>double()</strong> - converts a string or numeric to an approximate numeric value.</dd>
 <dd><strong>floor()</strong> - the same as <code>FLOOR</code> in SQL</dd>
 <dd><strong>abs()</strong>  - the same as <code>ABS</code> in SQL</dd>
-<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>).  Default template is ISO - “yyyy-dd-mm”.</dd>
+<dd><strong>datetime()</strong> - converts a character string to an SQL datetime type, optionally using a conversion template ( <a href="https://www.postgresql.org/docs/current/static/functions-formatting.html">templates examples</a>) . Default template is ISO - “yyyy-dd-mm”.    Default timezone could be specified  in second argument of <strong>datetime()</strong> function, it applied  only if  template contains <strong>TZH</strong> and there is no 	timezone in input data. That helps to keep jsonpath operators and functions to be immutable and, hence, indexable.</dd>
 </dl>
 <p>PostgreSQL adds support of  conversion of UNIX epoch (double) to timestamptz.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span><span class="token string">'"10-03-2017"'</span><span class="token punctuation">,</span><span class="token string">'$.datetime("dd-mm-yyyy")'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
