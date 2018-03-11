@@ -728,6 +728,7 @@ Syntax:</p>
       rooms <span class="token keyword">int</span>
     <span class="token punctuation">)</span>
   <span class="token punctuation">)</span><span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
+  
 <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> house_apt<span class="token punctuation">;</span>
  level <span class="token operator">|</span> <span class="token keyword">no</span> <span class="token operator">|</span>  area  <span class="token operator">|</span> rooms 
 <span class="token comment">-------+----+--------+-------</span>
@@ -737,6 +738,7 @@ Syntax:</p>
      <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">4</span> <span class="token operator">|</span>    <span class="token number">100</span> <span class="token operator">|</span>     <span class="token number">3</span>
      <span class="token number">2</span> <span class="token operator">|</span>  <span class="token number">5</span> <span class="token operator">|</span>     <span class="token number">60</span> <span class="token operator">|</span>     <span class="token number">2</span>
 <span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token keyword">SELECT</span>
   JSON_OBJECT<span class="token punctuation">(</span>
     <span class="token string">'level'</span>: level<span class="token punctuation">,</span>
@@ -898,8 +900,7 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="json_table---query-a-json-text-and-present-the-results-as-a-relational-table">JSON_TABLE - query a JSON text and present the results as a relational table</h3>
-<p>JSON_TABLE creates a relational view of JSON data, wh<br>
-JSON_TABLE internally uses XML_TABLE infrastructure.  It has three parameters:</p>
+<p>JSON_TABLE creates a relational view of JSON data.  It can be used only in FROM clause. JSON_TABLE internally uses XML_TABLE infrastructure.  It has three parameters:</p>
 <ol>
 <li>The JSON value on which to operate.</li>
 <li>An SQL/JSON path expression to specify zero or more rows.</li>
@@ -954,6 +955,7 @@ json_table_plan_primary ::=
 </code></pre>
 <p>JSON_TABLE uses path expression (in <code>json_api_common_syntax</code>) to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</p>
 <p>The COLUMNS clause can define several kinds of columns: ordinality columns, regular columns, formatted columns and nested columns .</p>
+<p>In the following example, the path expression <code>$.floor[*]</code> specifies  rows to output. Each row has column  <code>level</code> , which obtained by <strong>implicit</strong> path  <code>$.lvelel</code>, where <code>$</code> is  relative to parent path (absolute path is <code>$.floor[*].level</code>), column <code>num_apt</code>  and column <code>apts</code> explicitly defined by corresponding path expressions.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- basic example: regular and formatted columns, paths</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
