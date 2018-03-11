@@ -42,6 +42,7 @@
 }
 '</span><span class="token punctuation">;</span>
 </code></pre>
+<p>It can be illustrated as <a href="https://ic.pics.livejournal.com/obartunov/24248903/45289/45289_original.png">this picture</a>.</p>
 <p>Consider the following path expression:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token string">'$.floor[*].apt[*] ? (@.area &gt; 40 &amp;&amp; @.area &lt; 90)'</span>
 </code></pre>
@@ -310,8 +311,14 @@ json_value
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
 ERROR:  Invalid argument <span class="token keyword">for</span> SQL<span class="token operator">/</span>JSON <span class="token keyword">datetime</span> <span class="token keyword">function</span>
 
-<span class="token comment">-- Add default timezone</span>
+<span class="token comment">-- Identify "problematic" dates (no TZH specified)</span>
+<span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*] ? ((@.datetime("dd-mm-yy hh24:mi:ss TZH") &lt; "2000-01-01".datetime()) is unknown)'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
+   ?<span class="token keyword">column</span>?
+<span class="token comment">--------------</span>
+ <span class="token string">"01-02-2015"</span>
+<span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 
+<span class="token comment">-- Add default timezone</span>
 <span class="token keyword">SELECT</span> js @<span class="token operator">*</span> <span class="token string">'$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH","+3") ? (@ &lt; "2000-01-01".datetime())'</span> <span class="token keyword">FROM</span> house<span class="token punctuation">;</span>
           ?<span class="token keyword">column</span>?
 <span class="token comment">-----------------------------</span>
@@ -891,7 +898,8 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="json_table---query-a-json-text-and-present-the-results-as-a-relational-table">JSON_TABLE - query a JSON text and present the results as a relational table</h3>
-<p>JSON_TABLE creates a relational view of JSON data. JSON_TABLE internally uses XML_TABLE infrastructure.  It has three parameters:</p>
+<p>JSON_TABLE creates a relational view of JSON data, wh<br>
+JSON_TABLE internally uses XML_TABLE infrastructure.  It has three parameters:</p>
 <ol>
 <li>The JSON value on which to operate.</li>
 <li>An SQL/JSON path expression to specify zero or more rows.</li>
