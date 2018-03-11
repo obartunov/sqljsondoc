@@ -119,6 +119,21 @@ DETAIL:  syntax error<span class="token punctuation">,</span> unexpected GREATER
      <span class="token number">1</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
+<p>Operators exists @? and match @~  can be speeded up by GIN index using built-in <code>jsonb_ops</code> or <code>jsonb_path_ops</code> opclasses.</p>
+<pre><code>SELECT COUNT(*) FROM bookmarks 
+WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
+                                       QUERY PLAN
+------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.529..0.529 rows=1 loops=1)
+   -&gt;  Bitmap Heap Scan on bookmarks (actual time=0.080..0.502 rows=285 loops=1)
+         Recheck Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
+         Heap Blocks: exact=285
+         -&gt;  Bitmap Index Scan on bookmarks_jb_path_idx (actual time=0.045..0.045 rows=285 loops=1)
+               Index Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
+ Planning time: 0.053 ms
+ Execution time: 0.553 ms
+(8 rows)
+</code></pre>
 <p>Query operators:</p>
 <ul>
 <li><code>json[b] @* jsonpath</code> - set-query operator,  returns setof json[b].</li>
