@@ -133,6 +133,19 @@ WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
  Planning time: 0.053 ms
  Execution time: 0.553 ms
 (8 rows)
+
+SELECT COUNT(*) FROM bookmarks 
+WHERE jb @~ '$.tags[*].term == "NYC"';
+                                        QUERY PLAN                                               -----------------------------------------------------------------------------------------------
+Aggregate (actual time=0.930..0.930 rows=1 loops=1)
+   -&gt;  Bitmap Heap Scan on bookmarks (actual time=0.133..0.884 rows=285 loops=1)
+         Recheck Cond: (jb @~ '($."tags"[*]."term" == "NYC")'::jsonpath)
+         Heap Blocks: exact=285
+         -&gt;  Bitmap Index Scan on bookmarks_jb_path_idx (actual time=0.073..0.073 rows=285 loops=1)
+               Index Cond: (jb @~ '($."tags"[*]."term" == "NYC")'::jsonpath)
+ Planning time: 0.135 ms
+ Execution time: 0.973 ms
+(8 rows)
 </code></pre>
 <p>Query operators:</p>
 <ul>
@@ -877,7 +890,13 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
  <span class="token number">aaa</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<h3 id="json_table---query-a-json-text-and-present-it-as-a-relational-table">JSON_TABLE - query a JSON text and present it as a relational table</h3>
+<h3 id="json_table---query-a-json-text-and-present-the-results-as-a-relational-table">JSON_TABLE - query a JSON text and present the results as a relational table</h3>
+<p>JSON_TABLE creates a relational view of JSON data. JSON_TABLE internally uses XML_TABLE infrastructure.  It has three parameters:</p>
+<ol>
+<li>The JSON value on which to operate.</li>
+<li>An SQL/JSON path expression to specify zero or more rows.</li>
+<li>A COLUMNS clause to specify the shape of the output table. The COLUMNS can be nested.</li>
+</ol>
 <p>Syntax:</p>
 <pre><code>JSON_TABLE (
 json_api_common_syntax
@@ -1113,8 +1132,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON member <span class="token o
   <span class="token punctuation">)</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span> jt<span class="token punctuation">;</span>
 ERROR:  SQL<span class="token operator">/</span>JSON scalar required
 </code></pre>
-<p>The nested COLUMNS clause begins with the keyword NESTED, followed by a path and an optional path name. The path provides a refined context for the nested columns. The primary use of the path name is if the user wishes to specify an explicit plan. After the prolog to specify the path and path name, there is a COLUMNS clause, which has the same capabilities<br>
-already considered. The NESTED clause allows unnesting of (even deeply) nested JSON objects/arrays in one invocation rather than chaining several JSON_TABLE expressions in the SQL-statement.</p>
+<p>The nested COLUMNS clause begins with the keyword NESTED, followed by a path and an optional path name. The path provides a refined context for the nested columns. The primary use of the path name is if the user wishes to specify an explicit plan. After the prolog to specify the path and path name, there is a COLUMNS clause, which has the same capabilities already considered. The NESTED clause allows unnesting of (even deeply) nested JSON objects/arrays in one invocation rather than chaining several JSON_TABLE expressions in the SQL-statement.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- nested columns (1-level)</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
