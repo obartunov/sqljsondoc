@@ -900,12 +900,14 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="json_table---query-a-json-text-and-present-the-results-as-a-relational-table">JSON_TABLE - query a JSON text and present the results as a relational table</h3>
-<p>JSON_TABLE creates a relational view of JSON data.  It can be used only in FROM clause. JSON_TABLE internally uses XML_TABLE infrastructure.  It has three parameters:</p>
+<p>JSON_TABLE creates a relational view of JSON data.  It can be used only in FROM clause.  The co</p>
+<p>JSON_TABLE  has three parameters:</p>
 <ol>
 <li>The JSON value on which to operate.</li>
 <li>An SQL/JSON path expression to specify zero or more rows.</li>
 <li>A COLUMNS clause to specify the shape of the output table. The COLUMNS can be nested.</li>
 </ol>
+<p>JSON_TABLE internally uses XML_TABLE infrastructure.</p>
 <p>Syntax:</p>
 <pre><code>JSON_TABLE (
 json_api_common_syntax
