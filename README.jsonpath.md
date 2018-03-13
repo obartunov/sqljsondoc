@@ -848,7 +848,8 @@ ERROR: Invalid SQL<span class="token operator">/</span>JSON subscript
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<h3 id="json_value---extract-an-sql-value-of-a-predefined-type-from-a-json-value">JSON_VALUE - extract an SQL value of a predefined type from a JSON value</h3>
+<h3 id="json_value---extracts-a-scalar-json-value--and-returns-it-as-a-native-sql-type">JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type</h3>
+<p>Syntax:</p>
 <pre><code>JSON_VALUE (
   json_api_common_syntax
   [ RETURNING data_type ]
@@ -856,6 +857,7 @@ ERROR: Invalid SQL<span class="token operator">/</span>JSON subscript
   [ { ERROR | NULL | DEFAULT expression } ON ERROR ]
 )
 </code></pre>
+<p>The optional <code>RETURNING</code> clause performs a typecast. Without a <code>RETURNING</code> clause, <code>JSON_VALUE</code> returns a string.</p>
 <p>Examples:</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- Only singleton scalars are allowed here for returning:</span>
 <span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'[1]'</span><span class="token punctuation">,</span> <span class="token string">'strict $'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -863,7 +865,8 @@ ERROR: SQL<span class="token operator">/</span>JSON scalar required
 <span class="token keyword">SELECT</span> JSON_VALUE<span class="token punctuation">(</span>jsonb <span class="token string">'[1,2]'</span><span class="token punctuation">,</span> <span class="token string">'strict $[*]'</span> ERROR <span class="token keyword">ON</span> ERROR<span class="token punctuation">)</span><span class="token punctuation">;</span>
 ERROR: more than one SQL<span class="token operator">/</span>JSON item
 </code></pre>
-<h3 id="json_query---extract-a-json-text-from-a-json-text-using-an-sqljson-path-expression">JSON_QUERY - extract a JSON text from a JSON text using an SQL/JSON path expression</h3>
+<h3 id="json_query---extracts-a-part--of-json-document-and-returns-it-as-a-json-string">JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string</h3>
+<p>JSON_QUERY uses SQL/JSON path expression to extract a part[s] of JSON document. Since it should return a JSON string,  multiple parts should be wrapped   into an array  (<code>WRAPPER</code>) or the function should raise an exception.</p>
 <p>Syntax:</p>
 <pre><code>JSON_QUERY (
 	json_api_common_syntax
@@ -875,7 +878,7 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 	[ { ERROR | NULL | EMPTY { ARRAY | OBJECT } } ON ERROR ]
 )
 </code></pre>
-<p>Wrapper behavior (WITHOUT by default):</p>
+<p>Default behavior of <code>WRAPPER</code> clause is not to wrap the matched  parts of JSON document  ( <code>WITHOUT WRAPPER</code> ) and to wrap unconditionally if wrap (<code>WITH UNCONDITIONAL WRAPPER</code>).</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
     js<span class="token punctuation">,</span>
     JSON_QUERY<span class="token punctuation">(</span>js<span class="token punctuation">,</span> <span class="token string">'lax $[*]'</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token string">"without"</span><span class="token punctuation">,</span>
@@ -1169,7 +1172,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
 <span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
 </code></pre>
 <p>Every path may be followed by a path name using an AS clause. Path names are identifiers and must be unique. Path names are used in the PLAN clause to express the desired output plan. PLAN clause could be INNER, OUTER, UNION and CROSS, which correspond to INNER JOIN, LEFT OUTER JOIN, FULL OUTER JOIN and CROSS JOIN respectively.  If there is an explicit PLAN clause, all path names must be explicit and appear in the PLAN clause exactly once.</p>
-<p>INNER and OUTER are used for parent/child relationship and it is mandatory to specify the first operand (path name in AS clause) and it must be an ancestor of all path names in the second operand.</p>
+<p>INNER and OUTER  (default) are used for parent/child relationship and it is mandatory to specify the first operand (path name in AS clause) and it must be an ancestor of all path names in the second operand.</p>
 <p>UNION expresses semantics of a FULL OUTER JOIN and is default with sibling relationship.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1186,6 +1189,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
      <span class="token number">1</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- Default plan clause is  OUTER for parent/child relationship</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1366,6 +1370,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- INNER, UNION</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1386,6 +1391,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
      <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- OUTER, CROSS</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1404,6 +1410,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
      <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span>      <span class="token number">4</span>
      <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">5</span> <span class="token operator">|</span>      <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">5</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- INNER, CROSS</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1421,6 +1428,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
      <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">4</span>
      <span class="token number">2</span> <span class="token operator">|</span>   <span class="token number">5</span> <span class="token operator">|</span>   <span class="token number">5</span>
 <span class="token punctuation">(</span><span class="token number">4</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- OUTER, UNION</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1442,6 +1450,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
  <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
  <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
 <span class="token punctuation">(</span><span class="token number">7</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- INNER, UNION</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1462,6 +1471,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
  <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">3</span>
  <span class="token number">2</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span>      <span class="token number">4</span>
 <span class="token punctuation">(</span><span class="token number">6</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">--OUTER, CROSS</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
@@ -1482,6 +1492,7 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
  <span class="token number">2</span> <span class="token operator">|</span>      <span class="token number">4</span> <span class="token operator">|</span>      <span class="token number">4</span>
  <span class="token number">3</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span> <span class="token operator">|</span> <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
 <span class="token punctuation">(</span><span class="token number">6</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 <span class="token comment">-- INNER, CROSS</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
