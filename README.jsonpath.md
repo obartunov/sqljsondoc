@@ -1543,8 +1543,6 @@ ERROR:  SQL<span class="token operator">/</span>JSON scalar required
 <a href="http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip">http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip</a></li>
 <li>Jsonb roadmap - talk at <a href="http://PGConf.eu">PGConf.eu</a>, 2018<br>
 <a href="http://www.sai.msu.su/~megera/postgres/talks/sqljson-pgconf.eu-2017.pdf">http://www.sai.msu.su/~megera/postgres/talks/sqljson-pgconf.eu-2017.pdf</a></li>
-<li>Play with SQL/JSON on Android phone<br>
-<a href="https://obartunov.livejournal.com/199005.html">https://obartunov.livejournal.com/199005.html</a></li>
 </ul>
 <blockquote>
 <p>Written with <a href="https://stackedit.io/">StackEdit</a>.</p>
