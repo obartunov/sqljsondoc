@@ -903,12 +903,12 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <h3 id="json_table---query-a-json-text-and-present-the-results-as-a-relational-table">JSON_TABLE - query a JSON text and present the results as a relational table</h3>
-<p>JSON_TABLE creates a relational view of JSON data.  It can be used only in FROM clause.  The rows created by a  JSON_TABLE  are laterally joined, implicitly, to the row that generated them, so   there is no need to explicitly join a view produced by  JSON_TABLE  with the original table.</p>
+<p>JSON_TABLE creates a relational view of JSON data.  It can be used only in FROM clause.</p>
 <p>JSON_TABLE  has several parameters:</p>
 <ol>
 <li>The JSON value on which to operate.</li>
 <li>An SQL/JSON path expression to specify zero or more rows.</li>
-<li>A COLUMNS clause to specify the shape of the output table. The COLUMNS can be nested.</li>
+<li>A COLUMNS clause to specify the schema of the output table. The COLUMNS can be nested.</li>
 <li>Optionally, JSON_TABLE can have PLAN clause, which specifies how to join nested columns.</li>
 </ol>
 <p>JSON_TABLE internally uses XML_TABLE infrastructure (slightly modified).</p>
@@ -959,9 +959,11 @@ json_table_plan_sibling ::=
 json_table_plan_primary ::=
 		json_table_path_name | ( json_table_plan )
 </code></pre>
-<p>JSON_TABLE uses path expression (in <code>json_api_common_syntax</code>) to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</p>
+<p>JSON_TABLE uses path expression to extract the parts of input document and decompose them to the columns using COLUMNS clause (schema) , optionaly using PLAN clause.  COLUMNS clause specifies path expressions for  each column, which evaluated on the extracted parts to produce columns values.</p>
+<p>The rows created by a  JSON_TABLE  are laterally joined, implicitly, to the row that generated them, so   there is no need to explicitly join a view produced by  JSON_TABLE  with the original table.</p>
 <p>The COLUMNS clause can define several kinds of columns: ordinality columns, regular columns, formatted columns and nested columns .</p>
-<p>In the following example, the path expression <code>$.floor[*]</code> specifies  rows to output. Each row has column  <code>level</code> , which obtained by <strong>implicit</strong> path  <code>$.level</code>, where <code>$</code> is  relative to parent path (absolute path is <code>$.floor[*].level</code>), column <code>num_apt</code>  and column <code>apts</code> explicitly defined by corresponding path expressions.</p>
+<p>In the following example, JSON_TABLE generates rows,  which obtained by matching the path expression <code>$.floor[*]</code> to input documents represented by <code>js</code>, laterally joined  to the table <code>house</code>.  Each generated row has columns defined by path expressions ( relative to the parent row path expression <code>$.floor[*]</code> ) in  COLUMN clause:<br>
+column  <code>level</code>  obtained by <strong>implicit</strong> path  <code>$.level</code>, column <code>num_apt</code>  and column <code>apts</code> explicitly defined by corresponding path expressions.</p>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- basic example: regular and formatted columns, paths</span>
 <span class="token keyword">SELECT</span>
   jt<span class="token punctuation">.</span><span class="token operator">*</span>
