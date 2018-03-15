@@ -527,9 +527,9 @@ json_query
 </ul>
 <p>The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.  The SQL/JSON query functions all need a path specification, the JSON value to be input to that path specification for querying and processing, and optional parameter values passed to the path specification.</p>
 <ul>
-<li>JSON_VALUE - Extract an SQL value of a predefined type from a JSON value.</li>
-<li>JSON_QUERY - Extract a JSON text from a JSON text using an SQL/JSON path expression.</li>
-<li>JSON_TABLE - Query a JSON text and present it as a relational table.</li>
+<li>JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type.</li>
+<li>JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string.</li>
+<li>JSON_TABLE - query a JSON text and present the results as a relational table.</li>
 <li>IS [NOT] JSON - test whether a string value is a JSON text.</li>
 <li>JSON_EXISTS - determines whether a JSON value satisfies a search criterion.</li>
 </ul>
@@ -848,7 +848,7 @@ ERROR: Invalid SQL<span class="token operator">/</span>JSON subscript
  <span class="token number">f</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
-<h3 id="json_value---extracts-a-scalar-json-value--and-returns-it-as-a-native-sql-type">JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type</h3>
+<h3 id="a-namejson_valueajson_value---extracts-a-scalar-json-value--and-returns-it-as-a-native-sql-type"><a></a>JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type</h3>
 <p>Syntax:</p>
 <pre><code>JSON_VALUE (
   json_api_common_syntax
