@@ -375,19 +375,19 @@ ERROR:  Invalid argument <span class="token keyword">for</span> SQL<span class="
 </code></pre>
 <p><strong>PostgreSQL extensions</strong>:</p>
 <ol>
-<li><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.<br>
-Examples:<br>
-Wildcard member accessor returns the values of all elements without looking deep.</li>
+<li><strong>recursive wildcard member accessor</strong> – <code>.**</code>,  recursively applies wildcard member accessor <code>.*</code> to all levels of hierarchy and returns   the values of <strong>all</strong> attributes of the current object regardless of the level of the hierarchy.  It is possible to specify a level or range of the tree to unwrap – <code>.**{2}</code>, <code>.**{2 TO LAST}</code>.<br>
+Examples:</li>
 </ol>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.*'</span><span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token comment">-- Wildcard member accessor returns the values of all elements without looking deep.</span>
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.*'</span><span class="token punctuation">;</span>
    ?<span class="token keyword">column</span>?
 <span class="token comment">---------------</span>
  {<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}
  <span class="token number">1</span>
 <span class="token punctuation">(</span><span class="token number">2</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
-</code></pre>
-<p>Recursive wildcard member accessor “unwraps”  all objects and arrays</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.**'</span><span class="token punctuation">;</span>
+
+<span class="token comment">--  Recursive wildcard member accessor "unwraps"  all objects and arrays</span>
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.**'</span><span class="token punctuation">;</span>
            ?<span class="token keyword">column</span>?
 <span class="token comment">------------------------------</span>
  {<span class="token string">"a"</span>: {<span class="token string">"b"</span>: <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>}<span class="token punctuation">,</span> <span class="token string">"c"</span>: <span class="token number">1</span>}
@@ -397,15 +397,26 @@ Wildcard member accessor returns the values of all elements without looking deep
  <span class="token number">2</span>
  <span class="token number">1</span>
 <span class="token punctuation">(</span><span class="token number">6</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- Specify range </span>
+<span class="token keyword">SELECT</span> jsonb <span class="token string">'{"a":{"b":[1,2]}, "c":1}'</span> @<span class="token operator">*</span> <span class="token string">'$.**{2 TO LAST}'</span><span class="token punctuation">;</span>
+ ?<span class="token keyword">column</span>?
+<span class="token comment">----------</span>
+ <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span>
+ <span class="token number">1</span>
+ <span class="token number">2</span>
+<span class="token punctuation">(</span><span class="token number">3</span> <span class="token keyword">rows</span><span class="token punctuation">)</span>
+
 </code></pre>
 <ol start="2">
-<li><strong>automatic wrapping</strong>  - <code>[path]</code> is equivalent to <code>WITH WRAPPER</code> in SQL_XXX function.</li>
+<li><strong>automatic wrapping</strong>  - <code>[path]</code> is equivalent to <code>WITH WRAPPER</code>  clause in JSON_XXX functions.</li>
 </ol>
 <pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'[$[*]]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 json_query
 <span class="token comment">------------</span>
 <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">]</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
+
 <span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'[1,2,3]'</span><span class="token punctuation">,</span> <span class="token string">'$[*]'</span> <span class="token keyword">WITH</span> WRAPPER<span class="token punctuation">)</span><span class="token punctuation">;</span>
 json_query
 <span class="token comment">------------</span>
@@ -436,12 +447,12 @@ json_query
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
 </code></pre>
 <p>JSON literal <code>null</code> is parsed into the special SQL/JSON value <code>null</code>, which differs from SQL NULL, for example, SQL JSON <code>null</code> is equal to itself, so the result of <code>null == null</code> is <code>True</code>.</p>
-<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null == null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<pre class=" language-sql"><code class="prism  language-sql"><span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null == null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
  json_query
 <span class="token comment">------------</span>
  <span class="token number">1</span>
 <span class="token punctuation">(</span><span class="token number">1</span> <span class="token keyword">row</span><span class="token punctuation">)</span>
-<span class="token keyword">SELECT</span> json_query<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null != null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> JSON_QUERY<span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'$ ? (null != null)'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
  json_query
 <span class="token comment">------------</span>
  <span class="token punctuation">(</span><span class="token boolean">null</span><span class="token punctuation">)</span>
@@ -907,8 +918,8 @@ ERROR: more than one SQL<span class="token operator">/</span>JSON item
 <p>JSON_TABLE  has several parameters:</p>
 <ol>
 <li>The JSON value on which to operate.</li>
-<li>An SQL/JSON path expression to specify zero or more rows.</li>
-<li>A COLUMNS clause to specify the schema of the output table. The COLUMNS can be nested.</li>
+<li>An SQL/JSON path expression to specify zero or more rows. This  row pattern path expression is intended to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.</li>
+<li>A COLUMNS clause to specify the schema of the output table. The COLUMNS can be nested.  The path expressions used in COLUMNS specification decompose SQL/JSON item on columns.</li>
 <li>Optionally, JSON_TABLE can have PLAN clause, which specifies how to join nested columns.</li>
 </ol>
 <p>JSON_TABLE internally uses XML_TABLE infrastructure (slightly modified).</p>
@@ -959,7 +970,7 @@ json_table_plan_sibling ::=
 json_table_plan_primary ::=
 		json_table_path_name | ( json_table_plan )
 </code></pre>
-<p>JSON_TABLE uses path expression to extract the parts of input document and decompose them to the columns using COLUMNS clause (schema) , optionaly using PLAN clause.  COLUMNS clause specifies path expressions for  each column, which evaluated on the extracted parts to produce columns values.</p>
+<p>JSON_TABLE uses the row pattern  path expression to extract the parts of input document and decompose them to the columns using COLUMNS clause (schema) , optionaly using PLAN clause.  COLUMNS clause specifies path expressions for  each column, which evaluated on the extracted parts to produce columns values.</p>
 <p>The rows created by a  JSON_TABLE  are laterally joined, implicitly, to the row that generated them, so   there is no need to explicitly join a view produced by  JSON_TABLE  with the original table.</p>
 <p>The COLUMNS clause can define several kinds of columns: ordinality columns, regular columns, formatted columns and nested columns .</p>
 <p>In the following example, JSON_TABLE generates rows,  which obtained by matching the path expression <code>$.floor[*]</code> to input documents represented by <code>js</code>, laterally joined  to the table <code>house</code>.  Each generated row has columns defined by path expressions ( relative to the parent row path expression <code>$.floor[*]</code> ) in  COLUMN clause:<br>
