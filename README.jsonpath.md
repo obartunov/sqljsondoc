@@ -616,7 +616,7 @@ Note:
 
 ### Error handling 
 
-Since SQL standard describes using  strings for JSON  data and not  data type, parsing errors occurs not when casting string into the JSON type, so all corresponding SQL/JSON functions have special **ON ERROR**  clause, which specifies SQL/JSON function error behavior.
+Since SQL standard describes using  strings for JSON  data and not  data type, the parsing errors occur not when casting string into the JSON type, so all SQL/JSON retrieving functions have special **ON ERROR**  clause, which specifies SQL/JSON function error behavior.
 
 ### JSON_OBJECT - construct a JSON[b] object
 
@@ -1734,5 +1734,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjEwMDM3OTg2MF19
+eyJoaXN0b3J5IjpbOTU4MjM0OTUwXX0=
 -->
