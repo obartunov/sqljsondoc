@@ -589,10 +589,11 @@ The SQL/JSON construction functions use values of SQL types and produce JSON val
 The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.  The SQL/JSON query functions all need a path specification, the JSON value to be input to that path specification for querying and processing, and optional parameter values passed to the path specification.
 
 - IS [NOT] JSON - test whether a string value is a JSON text.
+- JSON_EXISTS - determines whether a JSON value satisfies a search criterion.
 - JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type.
 - JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string.
 - JSON_TABLE - query a JSON text and present the results as a relational table.
-- JSON_EXISTS - determines whether a JSON value satisfies a search criterion.
+
 
 ### Common syntax elements:
 ```
@@ -1678,5 +1679,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDIzMzc4MzkyXX0=
+eyJoaXN0b3J5IjpbNzU3NzI1MzE0XX0=
 -->
