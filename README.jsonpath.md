@@ -659,14 +659,14 @@ SELECT JSON_OBJECT('a': 1, 'a': 2 RETURNING jsonb);
 
 -- Omitting keys with NULL values (keys  are not allowed to be NULL):
 SELECT JSON_OBJECT('a': 1, 'b': NULL);
-       ?column?        
+      json_object      
 -----------------------
  {"a" : 1, "b" : null}
 (1 row)
 
 SELECT JSON_OBJECT('a': 1, 'b': NULL ABSENT ON NULL);
- ?column?  
------------
+ json_object 
+-------------
  {"a" : 1}
 (1 row)
 
@@ -675,12 +675,15 @@ SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5) AS apt;
 --------------------------------------
  {"area" : 50, "rooms" : 2, "no" : 5}
 (1 row)
+
 -- by default json type is returned
-SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5)->'no' AS apt;
- apt 
------
+SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5)->'no' AS no;
+ no 
+----
  5
 (1 row)
+
+
 -- jsonb: fields are ordered, duplicate fields removed
 SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL RETURNING jsonb) AS apt;
                 apt                 
@@ -1680,5 +1683,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTc3Mjg0MTAxMF19
+eyJoaXN0b3J5IjpbMTA4OTYxNDI3M119
 -->
