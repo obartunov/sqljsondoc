@@ -606,7 +606,7 @@ json_output_clause ::=
 json_api_common_syntax ::=
 	json_value_expression , json_path_specification
 	[ PASSING { json_value_expression AS identifier }[,...] 	]
-json_path_specification ::= jsonpath
+json_path_specification ::= character_string_literal | jsonpath_valued_expression /* extension */
 ```
 Note: 
 - Only UTF8 encoding is supported
@@ -1679,5 +1679,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzU3NzI1MzE0XX0=
+eyJoaXN0b3J5IjpbLTM5Mjc4NTAwN119
 -->
