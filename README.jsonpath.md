@@ -1719,6 +1719,8 @@ https://github.com/postgrespro/sqljson
 http://sqlfiddle.postgrespro.ru/#!21/0/2580
 * Try SQL/JSON on your android phone 
 https://obartunov.livejournal.com/199005.html
+*  SQL/JSON standard-2016 conformance for PostgreSQL, Oracle, SQL Server and MySQL
+ https://obartunov.livejournal.com/200076.html
 * Technical Report (SQL/JSON) - available for free
 http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip
 * Jsonb roadmap - talk at PGConf.eu, 2018
@@ -1732,5 +1734,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjA2NjcxMzIzMF19
+eyJoaXN0b3J5IjpbMjEwMDM3OTg2MF19
 -->
