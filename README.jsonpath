@@ -760,15 +760,21 @@ Examples:
 SELECT JSON_ARRAY('string', 123, TRUE, ARRAY[1,2,3],
   '{"a": 1}'::jsonb, '[1, {"c": 3}]' FORMAT JSON
 );
-                       ?column?
------------------------------------------------------------
+                       json_array                        
+---------------------------------------------------------
  ["string", 123, true, [1,2,3], {"a": 1}, [1, {"c": 3}]]
 (1 row)
 
 SELECT JSON_ARRAY(SELECT * FROM generate_series(1, 3));
- ?column?  
------------
+ json_array 
+------------
  [1, 2, 3]
+(1 row)
+
+SELECT JSON_ARRAY(SELECT * FROM generate_series(1, 3) RETURNING bytea);
+      json_array      
+----------------------
+ \x5b312c20322c20335d
 (1 row)
 
 SELECT JSON_ARRAY(
@@ -780,6 +786,7 @@ SELECT JSON_ARRAY(
 -----------------------------------------------------------------------------------------------------------------------------
  [{ "no": 1, "area": 40, "rooms": 1 }, {"no" : 3, "area" : null, "rooms" : 2}, "{\"no\" : 2, \"area\" : 80, \"rooms\" : 3}"]
 (1 row)
+
 ```
 ### JSON_ARRAYAGG - aggregates values as JSON[b] array
 Internally transformed into a json[b]\_agg() call.
@@ -795,8 +802,8 @@ JSON_ARRAYAGG (
 Examples:
 ```sql
 SELECT JSON_ARRAYAGG(i) FROM generate_series(1, 3) i;
- ?column?  
------------
+ json_arrayagg 
+---------------
  [1, 2, 3]
 (1 row)
 
@@ -1686,5 +1693,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTMzNzQxMjYzMl19
+eyJoaXN0b3J5IjpbLTIwMjMxMDQyMDBdfQ==
 -->
