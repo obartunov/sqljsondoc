@@ -907,7 +907,7 @@ FROM (
 
 ### JSON_EXISTS - determines whether a JSON value satisfies a search criterion
 
-JSON_EXISTS is a predicate, that can be used to  test whether an SQL/JSON path expression finds one or more  SQL/JSON items.
+JSON_EXISTS is a predicate, that can be used to  test whether an SQL/JSON path expression returns one or more  SQL/JSON items.
 
 Syntax:
 ```
@@ -915,9 +915,8 @@ JSON_EXISTS (
 	json_api_common_syntax
 	[ { TRUE | FALSE | UNKNOWN | ERROR } ON ERROR ]
 )
-
-Default is FALSE ON ERROR.
 ```
+Default is FALSE ON ERROR.
 
 Examples:
 ```sql
@@ -1693,5 +1692,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTk1Mjg3NDQxNF19
+eyJoaXN0b3J5IjpbLTE3ODE4MDc3ODFdfQ==
 -->
