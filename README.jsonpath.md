@@ -958,7 +958,7 @@ JSON_VALUE (
   [ { ERROR | NULL | DEFAULT expression } ON ERROR ]
 )
 ```
-The optional `RETURNING` clause performs a typecast. Without a `RETURNING` clause, `JSON_VALUE` returns a string.
+The optional `RETURNING` clause performs a typecast. Without a `RETURNING` clause, `JSON_VALUE` returns a string of type `text`.
 
 Examples:
 ```sql
@@ -1692,5 +1692,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE3ODE4MDc3ODFdfQ==
+eyJoaXN0b3J5IjpbLTUxOTIzODE3NV19
 -->
