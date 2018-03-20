@@ -1343,7 +1343,7 @@ FROM
      2 |  5 |     60 |     2
 (5 rows)
 ```
-Every path may be followed by a path name using an AS clause. Path names are identifiers and must be unique and don't match the column names. Path names are used in the PLAN clause to express the desired output plan. PLAN clause could be INNER, OUTER, UNION and CROSS, which correspond to INNER JOIN, LEFT OUTER JOIN, FULL OUTER JOIN and CROSS JOIN respectively.  If there is an explicit PLAN clause, all path names must be explicit and appear in the PLAN clause exactly once.
+Every path may be followed by a path name using an AS clause. Path names are identifiers and must be unique and don't coincide with the column names. Path names are used in the PLAN clause to express the desired output plan. PLAN clause could be INNER, OUTER, UNION and CROSS, which correspond to INNER JOIN, LEFT OUTER JOIN, FULL OUTER JOIN and CROSS JOIN respectively.  If there is an explicit PLAN clause, all path names must be explicit and appear in the PLAN clause exactly once.
 
 INNER and OUTER  (default) are used for parent/child relationship and it is mandatory to specify the first operand (path name in AS clause) and it must be an ancestor of all path names in the second operand. 
 
@@ -1733,5 +1733,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTI4NjI4NTYzN119
+eyJoaXN0b3J5IjpbNDQ0MDcyNDQ0XX0=
 -->
