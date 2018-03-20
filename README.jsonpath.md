@@ -387,12 +387,6 @@ SELECT jsonb '0' @* '$.datetime().type()';
  "timestamp with time zone"
 (1 row)
 
-SELECT jsonb '0' @* '$.datetime()';
-          ?column?
------------------------------
- "1970-01-01T00:00:00+00:00"
-(1 row)
-
 SELECT jsonb '[0, 123.45]' @* '$.datetime()';
             ?column?            
 --------------------------------
@@ -1684,5 +1678,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1NTA4MDA0NjVdfQ==
+eyJoaXN0b3J5IjpbNDYxNjAwNzAxXX0=
 -->
