@@ -332,6 +332,14 @@ SELECT JSON_VALUE('"12:34:56"','$.datetime().type()');
  time without time zone
 (1 row)
 
+SELECT jsonb '[0, 123.45]' @* '$.datetime()';
+            ?column?            
+--------------------------------
+ "1970-01-01T00:00:00+00:00"
+ "1970-01-01T00:02:03.45+00:00"
+(2 rows)
+
+
 -- SQL Standard is strict about matching of data and template
 -- An error occurs if some data doesn't contains timezone
 
@@ -1676,5 +1684,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTgwMjAzMzA5N119
+eyJoaXN0b3J5IjpbLTM1NTg1ODE0MV19
 -->
