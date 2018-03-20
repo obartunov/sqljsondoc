@@ -967,6 +967,42 @@ SELECT JSON_VALUE(jsonb '[1]', 'strict $' ERROR ON ERROR);
 ERROR: SQL/JSON scalar required
 SELECT JSON_VALUE(jsonb '[1,2]', 'strict $[*]' ERROR ON ERROR);
 ERROR: more than one SQL/JSON item
+
+SELECT JSON_VALUE('"123.45"', '$' RETURNING float);
+ json_value 
+------------
+     123.45
+(1 row)
+
+SELECT JSON_VALUE('"123.45"', '$' RETURNING int ERROR ON ERROR);
+ERROR:  invalid input syntax for integer: "123.45"
+
+SELECT JSON_VALUE('123.45', '$' RETURNING int);
+ json_value 
+------------
+        123
+(1 row)
+
+SELECT JSON_VALUE('123.45', '$' RETURNING text);
+ json_value 
+------------
+ 123.45
+(1 row)
+
+SELECT JSON_VALUE('null', '$' RETURNING int ERROR ON ERROR);
+ json_value 
+------------
+ (null)
+(1 row)
+SELECT JSON_VALUE('"03:04 2015-02-01"', '$.datetime("HH24:MI YYYY-MM-DD")' RETURNING date);
+ json_value 
+------------
+ 2015-02-01
+(1 row)
+
+SELECT JSON_VALUE('"03:04 2015-02-01"', '$' RETURNING date ERROR ON ERROR);
+ERROR:  invalid input syntax for type date: "03:04 2015-02-01"
+
 ```
 
 ### JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string
@@ -1006,6 +1042,11 @@ FROM
 ```
 Quotes behavior (KEEP by default):
 ```sql
+SELECT JSON_QUERY(jsonb '"aaa"', '$' RETURNING text);
+ json_query 
+------------
+ "aaa"
+(1 row)
 SELECT JSON_QUERY(jsonb '"aaa"', 'strict $' RETURNING text OMIT QUOTES);
  json_query
 ------------
@@ -1692,5 +1733,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTUxOTIzODE3NV19
+eyJoaXN0b3J5IjpbMzEyMzY4MjM4XX0=
 -->
