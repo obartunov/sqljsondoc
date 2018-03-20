@@ -440,7 +440,7 @@ SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**{2 TO LAST}';
 
  ```
  
-  2.   __automatic wrapping__  - `[path]` is equivalent to `WITH WRAPPER`  clause in JSON_XXX functions.
+  2.   __automatic wrapping__  - `[path]` is equivalent to `WITH WRAPPER`  clause in JSON_QUERY.
    ```sql
    SELECT JSON_QUERY('[1,2,3]', '[$[*]]');
  json_query
@@ -588,10 +588,10 @@ The SQL/JSON construction functions use values of SQL types and produce JSON val
 
 The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.  The SQL/JSON query functions all need a path specification, the JSON value to be input to that path specification for querying and processing, and optional parameter values passed to the path specification.
 
+- IS [NOT] JSON - test whether a string value is a JSON text.
 - JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type.
 - JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string.
 - JSON_TABLE - query a JSON text and present the results as a relational table.
-- IS [NOT] JSON - test whether a string value is a JSON text.
 - JSON_EXISTS - determines whether a JSON value satisfies a search criterion.
 
 ### Common syntax elements:
@@ -1678,5 +1678,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDYxNjAwNzAxXX0=
+eyJoaXN0b3J5IjpbNDIzMzc4MzkyXX0=
 -->
