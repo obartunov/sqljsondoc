@@ -1705,7 +1705,6 @@ FROM
    - JSON_ARRAY(SELECT ... FORMAT JSON ...)
    - JSON_ARRAY(SELECT ... (ABSENT|NULL) ON NULL ...)
   -  json_path_specification extended  to be an expression of jsonpath type. The standard requires  it `character_string_literal`.
-  - Only error codes are returned for the failed arithmetic operations inside jsonpath, error messages are lost
 -  Use boolean  expression on the path, PostgreSQL extension
 -  Default timezone added to `datetime()` as second argument. That helped to keep jsonpath operators and functions to be immutable.
 - `.**`  - recursive wildcard member accessor, PostgreSQL extension
@@ -1733,5 +1732,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDQ0MDcyNDQ0XX0=
+eyJoaXN0b3J5IjpbMjA2NjcxMzIzMF19
 -->
