@@ -614,9 +614,6 @@ Note:
 - json_representation could be only `json`, so FORMAT is implemented only for the standard compatibility.
 -  The standard requires `character_string_literal` in json_path_specification,  PostgreSQL extends json_path_specification to a separate data type `jsonpath`.
 
-### Error handling 
-
-Since SQL standard describes using  strings for JSON  data and not  data type, the parsing errors occur not when casting string into the JSON type, instead, they catch so all SQL/JSON retrieving functions have special **ON ERROR**  clause, which specifies SQL/JSON function error behavior.
 
 ### JSON_OBJECT - construct a JSON[b] object
 
@@ -1734,5 +1731,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE3ODMyNDM2OTldfQ==
+eyJoaXN0b3J5IjpbMTc1MzY5NjI5Ml19
 -->
