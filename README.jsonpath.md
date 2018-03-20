@@ -750,11 +750,7 @@ JSON_ARRAY (
 JSON_ARRAY (
   query_expression
   [ RETURNING data_type [ FORMAT JSON ] ]
-)
-
-Thr
-Про `JSON_ARRAY(subquery ...)` можно написать, что это трансформируется в
-`(SELECT JSON_ARRAYAGG(elem ...) FROM (subquery) q(elem))`.
+)SQL/JSON path expression finds
 ```
 Options and RETURNING clause are the same as in JSON_OBJECT.
 Note: ON NULL clause is not supported in subquery variant.
@@ -1697,5 +1693,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTA3NzU1ODM0MF19
+eyJoaXN0b3J5IjpbMTk1Mjg3NDQxNF19
 -->
