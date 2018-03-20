@@ -643,19 +643,20 @@ Examples:
 
 ```sql
 SELECT JSON_OBJECT('a': 1, 'a': 2 WITH UNIQUE KEYS);
-ERROR: duplicate JSON key "a"
+ERROR:  duplicate JSON key "a"
 
 SELECT JSON_OBJECT('a': 1, 'a': 2);
-      ?column?      
+    json_object     
 --------------------
  {"a" : 1, "a" : 2}
 (1 row)
 
 SELECT JSON_OBJECT('a': 1, 'a': 2 RETURNING jsonb);
- ?column?      
-----------
+ json_object 
+-------------
  {"a": 2}
 (1 row)
+
 -- Omitting keys with NULL values (keys  are not allowed to be NULL):
 SELECT JSON_OBJECT('a': 1, 'b': NULL);
        ?column?        
@@ -1679,5 +1680,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM5Mjc4NTAwN119
+eyJoaXN0b3J5IjpbMTc3Mjg0MTAxMF19
 -->
