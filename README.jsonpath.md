@@ -686,19 +686,22 @@ SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5)->'no' AS no;
 
 -- jsonb: fields are ordered, duplicate fields removed
 SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL RETURNING jsonb) AS apt;
-                apt                 
+                 apt                 
 -------------------------------------
  {"no": 5, "area": null, "rooms": 2}
 (1 row)
+
 -- WITH UNIQUE
 SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL WITH UNIQUE KEYS RETURNING jsonb) AS apt;
 ERROR:  duplicate JSON key "area"
+
 -- ABSENT ON NULL (last "area" key is skipped)
 SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL ABSENT ON NULL RETURNING jsonb) AS apt;
                 apt                
 -----------------------------------
  {"no": 5, "area": 50, "rooms": 2}
 (1 row)
+
 -- ABSENT ON NULL + WITH UNIQUE (key uniqueness is checked before NULLs are removed)
 SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL ABSENT ON NULL WITH UNIQUE KEYS RETURNING jsonb) AS apt;
 ERROR:  duplicate JSON key "area"
@@ -720,8 +723,8 @@ Options and RETURNING clause are the same as in JSON_OBJECT.
 Examples:
 ```sql
 SELECT JSON_OBJECTAGG('key' || i : 'val' ||  i)
-   FROM generate_series(1, 3) i;
-                       ?column?
+FROM generate_series(1, 3) i;
+                    json_objectagg                     
 -------------------------------------------------------
  { "key1" : "val1", "key2" : "val2", "key3" : "val3" }
 (1 row)
@@ -1683,5 +1686,5 @@ eyJoaXN0b3J5IjpbMTc1NjcxNDgyNl19
 eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTA4OTYxNDI3M119
+eyJoaXN0b3J5IjpbMTMzNzQxMjYzMl19
 -->
