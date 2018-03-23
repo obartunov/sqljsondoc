@@ -6,7 +6,7 @@
 
 SQL-2016 standard doesn't describes the JSON data type, but instead it  introduced SQL/JSON data model (not  JSON data type like XML )  with string storage and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.
 
-PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the jsonb data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, jsonb data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
+PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
 
 ## SQL/JSON Path language 
 
@@ -56,7 +56,7 @@ The result of this path expression will be information about apartments with roo
 ```sql
 '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90) ? (@.rooms > 2)'
 ```
-It's possible to use the __path variables__ in path expression, whose values are set in __PASSING__ clause of invoked SQL/JSON function. For example (js is a column of type JSON):
+It's possible to use the __path variables__ in path expression, whose values are set in __`PASSING`__ clause of invoked SQL/JSON function. For example (js is a column of type JSON):
 ```sql
 SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area > $min && @.area < $max)' PASSING 40 AS min, 90 AS max WITH WRAPPER) FROM house;
                                json_query
@@ -64,9 +64,25 @@ SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area > $min && @.area < $max)' PAS
  [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
 (1 row)
 ```
-__WITH WRAPPER__ clause  is used to wrap the results into array, since  JSON_QUERY output should be  JSON text.  If minimal and maximal values are stored in table `area (min integer, max integer)`, then it is possible to pass them to the path expression:
+__`WITH WRAPPER`__ clause  is used to wrap the results into array, since  `JSON_QUERY` output should be  JSON text.  If minimal and maximal values are stored in table `area (min integer, max integer)`, then it is possible to pass them to the path expression:
 ```sql
-SELECT JSON_QUERY(house.js, '$.floor[*].apt[*] ? (@.area > $min && @.area < $max)' PASSING area.min AS min, area.max AS max WITH WRAPPER) FROM house, area;
+SELECT JSON_QUERY(
+  house.js, '$.floor[*].apt[*] ? (@.area > $min && @.area < $max)'
+  PASSING area.min AS min,
+          area.max AS max
+  WITH WRAPPER
+  EMPTY ARRAY ON EMPTY
+)
+FROM
+  house,
+  (VALUES (30, 50), (70, 120), (200, 300)) area(min, max);
+                               json_query                                
+-------------------------------------------------------------------------
+ [{"no": 1, "area": 40, "rooms": 1}]
+ [{"no": 2, "area": 80, "rooms": 3}, {"no": 4, "area": 100, "rooms": 3}]
+ []
+(3 rows)
+
 ```
 Example of using several filters in json path expression, which returns room number (integer) and the room should satisfies the several conditions: the one is checking floor level and another - its area.
 ```sql
@@ -92,9 +108,9 @@ SELECT JSON_QUERY( js , '$.floor[*].apt[*].keyvalue() ? (@.key == "no").value' W
 
 ## JSONPATH in PostgreSQL
 
-In PostgreSQL the SQL/JSON path language is implemented as  **JSONPATH**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (*PostgreSQL extension*) expression on the path. *Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )*.  
+In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (*PostgreSQL extension*) expression on the path. *Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )*.  
 
-Examples of vaild jsonpath:
+Examples of vaild `jsonpath`:
 ```sql
 '$.floor'
 '($+1)'
@@ -103,12 +119,12 @@ Examples of vaild jsonpath:
 '($.floor[*].apt[*].area > 10)'
 '$.floor[*].apt[*] ? (@.area == null).no'
 ```
-Jsonpath could be an expression:
+`Jsonpath` could be an expression:
 ```sql
 '$' || '.' || 'a'
 ```
 
-Syntactical errors in jsonpath are reported
+Syntactical errors in `jsonpath` are reported
 ```sql
 SELECT '$a. >1'::jsonpath;
 ERROR:  bad jsonpath representation at character 8
@@ -116,9 +132,9 @@ DETAIL:  syntax error, unexpected GREATER_P at or near ">"
 ```
 An [Example](#how-path-expression-works) of how path expression works.
 
-### Jsonpath operators
+### `Jsonpath` operators
 
-To accelerate JSON path queries using existing indexes for jsonb  (GIN index using built-in  `jsonb_ops` or `jsonb_path_ops`)  PostgreSQL extends the standard with two  boolean operators for json[b] and jsonpath data types.
+To accelerate JSON path queries using existing indexes for `jsonb`  (GIN index using built-in  `jsonb_ops` or `jsonb_path_ops`)  PostgreSQL extends the standard with two  boolean operators for `json[b]` and `jsonpath` data types.
 
 * `json[b] @? jsonpath` -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.
 * `json[b] @~ jsonpath` - match operator, returns the result of boolean predicate (*PostgreSQL extension*).
@@ -136,7 +152,7 @@ SELECT js @~  '$.floor[*].apt[*].area <  20' FROM house;
  f
 (1 row)
 ```
-`jsonb @? jsonpath` and `jsonb @~ jsonpath` are as fast as `jsonb @> jsonb`  (for equality operation),  but  jsonpath supports more complex expressions, for example:
+`jsonb @? jsonpath` and `jsonb @~ jsonpath` are as fast as `jsonb @> jsonb`  (for equality operation),  but  `jsonpath` supports more complex expressions, for example:
 ```sql
 SELECT count(*) FROM house WHERE   js @~ '$.info.dates[*].datetime("dd-mm-yy")  > "1945-03-09".datetime()';
  count
@@ -144,8 +160,8 @@ SELECT count(*) FROM house WHERE   js @~ '$.info.dates[*].datetime("dd-mm-yy")  
      1
 (1 row)
 ```
-Operators exists @? and match @~  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses.
-```
+Operators exists `@?` and match `@~`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses.
+```sql
 SELECT COUNT(*) FROM bookmarks 
 WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
                                        QUERY PLAN
@@ -176,8 +192,8 @@ Aggregate (actual time=0.930..0.930 rows=1 loops=1)
 
 Query operators:
 
-* `json[b] @* jsonpath` - set-query operator,  returns setof json[b].
-* `json[b] @# jsonpath` - singleton-query operator,  returns a single json[b].
+* `json[b] @* jsonpath` - set-query operator,  returns `setof json[b]`.
+* `json[b] @# jsonpath` - singleton-query operator,  returns a single `json[b]`.
 The results is depends on the size of the resulted SQL/JSON sequence:
 --  empty sequence - returns SQL NULL;
 -- single item - returns the item;
@@ -198,7 +214,7 @@ SELECT js @#  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
  [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
 (1 row)
 ```
-Operator `@#` can be used to index jsonb:
+Operator `@#` can be used to index `jsonb`:
 ```sql
 CREATE INDEX bookmarks_oper_path_idx ON bookmarks USING gin((js @# '$.tags.term') jsonb_path_ops);
 EXPLAIN ( ANALYZE, COSTS OFF) SELECT COUNT(*) FROM bookmarks WHERE js @# '$.tags.term' @> '"NYC"';
@@ -219,13 +235,13 @@ EXPLAIN ( ANALYZE, COSTS OFF) SELECT COUNT(*) FROM bookmarks WHERE js @# '$.tags
 
 The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.
 
-In __strict__ mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to JSON_XXX function to actually report it, see `ON ERROR` clause).
+In __strict__ mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to `JSON_XXX` function to actually report it, see `ON ERROR` clause).
 For example: 
 
 ```sql
 SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
 ```
-Notice,  JSON_VALUE function needs `ERROR ON ERROR`  to report the error  , since default behaviour  `NULL ON ERROR` suppresses error reporting and returns `null`. 
+Notice,  `JSON_VALUE` function needs `ERROR ON ERROR`  to report the error  , since default behaviour  `NULL ON ERROR` suppresses error reporting and returns `null`.
 
 In __strict__ mode  using an array accessor on a scalar value  or  object triggers error handling.
 ```sql
@@ -265,7 +281,7 @@ __path literal__
 
 __path variable__
 ~ ```$``` -- context item
-~ ```$var``` -- named variable, value is set in PASSING clause (*may be of   datetime type*)
+~ ```$var``` -- named variable, value is set in `PASSING` clause (*may be of   datetime type*)
 ~ ```@``` -- value of the current item in a filter
 ~ ```last``` - JSON last subscript of an array
 
@@ -312,14 +328,14 @@ SELECT JSON_VALUE('[1,2,3]', '[$[*] ? (@ > 1)].size()' RETURNING int);
 (1 row)
  ```
  
-   ~ __ceiling()__ - the same as `CEILING` in SQL
-   ~ __double()__ - converts a string or numeric to an approximate numeric value.
-   ~ __floor()__ - the same as `FLOOR` in SQL
-   ~ __abs()__  - the same as `ABS` in SQL
-   ~ __datetime()__ - converts a character string to an SQL datetime type, optionally using a conversion template ( [templates examples](https://www.postgresql.org/docs/current/static/functions-formatting.html)) . Default template is ISO - "yyyy-dd-mm".    Default timezone could be specified  as a second argument of __datetime()__ function, it applied  only if  template contains **TZH** and there is no 	timezone in input data.  That helps to keep jsonpath operators and functions to be immutable and, hence, indexable.
+   ~ __`ceiling()`__ - the same as `CEILING` in SQL
+   ~ __`double()`__ - converts a string or numeric to an approximate numeric value.
+   ~ __`floor()`__ - the same as `FLOOR` in SQL
+   ~ __`abs()`__  - the same as `ABS` in SQL
+   ~ __`datetime()`__ - converts a character string to an SQL datetime type, optionally using a conversion template ( [templates examples](https://www.postgresql.org/docs/current/static/functions-formatting.html)) . Default template is ISO - "yyyy-dd-mm".    Default timezone could be specified  as a second argument of __datetime()__ function, it applied  only if  template contains **TZH** and there is no 	timezone in input data.  That helps to keep jsonpath operators and functions to be immutable and, hence, indexable.
     
  
- PostgreSQL adds support of  conversion of UNIX epoch (double) to timestamptz.
+ PostgreSQL adds support of  conversion of UNIX epoch (double) to `timestamptz`.
 ```sql
 SELECT JSON_VALUE('"10-03-2017"','$.datetime("dd-mm-yyyy")');
  json_value
@@ -393,7 +409,6 @@ SELECT jsonb '[0, 123.45]' @* '$.datetime()';
  "1970-01-01T00:00:00+00:00"
  "1970-01-01T00:02:03.45+00:00"
 (2 rows)
-
 ```
    ~ __keyvalue()__ - transforms json to an SQL/JSON sequence of objects with a known schema. Example:
    ```sql
@@ -402,8 +417,8 @@ SELECT jsonb '[0, 123.45]' @* '$.datetime()';
 --------------------------------------------------------------------------------------
  [{"key": "a", "value": 123}, {"key": "b", "value": 456}, {"key": "c", "value": 789}]
 (1 row)
-  ```
-   
+```
+
  **PostgreSQL extensions**:
    1.  __recursive wildcard member accessor__ -- `.**`,  recursively applies wildcard member accessor `.*` to all levels of hierarchy and returns   the values of **all** attributes of the current object regardless of the level of the hierarchy.  It is possible to specify a level or range of the tree to unwrap -- `.**{2}`, `.**{2 TO LAST}`.
 Examples:
@@ -430,17 +445,16 @@ SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**';
 (6 rows)
 
 -- Specify range 
-SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**{2 TO LAST}';
+SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**{2 to last}';
  ?column?
 ----------
  [1, 2]
  1
  2
 (3 rows)
-
- ```
+```
  
-  2.   __automatic wrapping__  - `[path]` is equivalent to `WITH WRAPPER`  clause in JSON_QUERY.
+  2.   __automatic wrapping__  - `[path]` is equivalent to `WITH WRAPPER`  clause in `JSON_QUERY`.
    ```sql
    SELECT JSON_QUERY('[1,2,3]', '[$[*]]');
  json_query
@@ -453,19 +467,19 @@ SELECT JSON_QUERY('[1,2,3]', '$[*]' WITH WRAPPER);
 ------------
  [1, 2, 3]
 (1 row)
-  ```
+```
 
    
  ### Filter expression
-A filter expression is similar to a WHERE clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
+A filter expression is similar to a `WHERE` clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
 
-Within a filter, the special variable @ is used to reference the current SQL/JSON item in the SQL/JSON sequence.
+Within a filter, the special variable `@` is used to reference the current SQL/JSON item in the SQL/JSON sequence.
 
 The SQL/JSON path language has the following predicates:
 
  - `exists` predicate, to test if a path expression has a non-empty result.
-- Comparison predicates ==, !=, <>, <, <=, >, and >=.
-- `like_regex` for string pattern matching.  Optional parameter`flag` can be combination of `i,s,m,x`, default value is `s`.
+- Comparison predicates `==`, `!=`, `<>`, `<`, `<=`, `>`, and `>=`.
+- `like_regex` for string pattern matching.  Optional parameter`flag` can be combination of `i`, `s`, `m`, `x`, default value is `s`.
 - `starts with` to test for an initial substring (prefix).
 - `is unknown` to test for `Unknown` results. Its operand should be in parentheses.
 
@@ -559,7 +573,7 @@ Path expression is intended to produce an SQL/JSON sequence ( an ordered list of
 ```
 at first step produces SQL/JSON sequence of length 1, which is simply json itself - the context item, denoted as `$`.  Next step is member accessor `.floor` - the result is SQL/JSON sequence of length 1 - an array `floor`, which then unwrapped by  wildcard  array element accessor  `[*]` to SQL/JSON sequence of length 2, containing an array of two objects . Next, `.apt`  produces two arrays of objects and `[*]` extracts  SQL/JSON sequence of length 5 ( five objects - appartments), each of which filtered by a filter expression `(@.area > 40 && @.area < 90)`, so a result of the whole path expression  is a sequence of two SQL/JSON items.
 
-```
+```sql
 SELECT JSON_QUERY(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' WITH WRAPPER) FROM house;
                                json_query
 ------------------------------------------------------------------------
@@ -581,18 +595,18 @@ SELECT js @*  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
 ###  Introduction to SQL/JSON functions
 
 The SQL/JSON construction functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. They are mostly the same as corresponding json[b] construction functions.
-- JSON_OBJECT -  construct a JSON[b] object
-- JSON_ARRAY -  construct a JSON[b] array
-- JSON_ARRAYAGG -  aggregates values as JSON[b] array
-- JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object
+- `JSON_OBJECT` -  construct a JSON\[b\] object
+- `JSON_ARRAY` -  construct a JSON\[b\] array
+- `JSON_ARRAYAGG` -  aggregates values as JSON\[b\] array
+- `JSON_OBJECTAGG` - aggregates name/value pairs  as JSON\[b\] object
 
 The SQL/JSON retrieval functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.  The SQL/JSON query functions all need a path specification, the JSON value to be input to that path specification for querying and processing, and optional parameter values passed to the path specification.
 
-- IS [NOT] JSON - test whether a string value is a JSON text.
-- JSON_EXISTS - determines whether a JSON value satisfies a search criterion.
-- JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type.
-- JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string.
-- JSON_TABLE - query a JSON text and present the results as a relational table.
+- `IS [NOT] JSON` - test whether a string value is a JSON text.
+- `JSON_EXISTS` - determines whether a JSON value satisfies a search criterion.
+- `JSON_VALUE` - extracts a scalar JSON value  and returns it as a native SQL type.
+- `JSON_QUERY` - extracts a part  of JSON document and returns it as a JSON string.
+- `JSON_TABLE` - query a JSON text and present the results as a relational table.
 
 
 ### Common syntax elements:
@@ -605,19 +619,20 @@ json_output_clause ::=
 	RETURNING data_type [ FORMAT json_representation ]
 json_api_common_syntax ::=
 	json_value_expression , json_path_specification
-	[ PASSING { json_value_expression AS identifier }[,...] 	]
-json_path_specification ::= character_string_literal | jsonpath_valued_expression /* extension */
+	[ PASSING { json_value_expression AS identifier }[,...] ]
+json_path_specification ::=
+	character_string_literal | jsonpath_valued_expression /* extension */
 ```
 Note: 
-- Only UTF8 encoding is supported
-- data_type in RETURNING could be one of json (default), jsonb, text,  bytea.  PostgreSQL extends the supported types to  records, arrays and domains.
-- json_representation could be only `json`, so FORMAT is implemented only for the standard compatibility.
--  The standard requires `character_string_literal` in json_path_specification,  PostgreSQL extends json_path_specification to a separate data type `jsonpath`.
+- Only `UTF8` encoding is supported
+- `data_type` in `RETURNING` could be one of `json` (default), `jsonb`, `text`,  `bytea`.  PostgreSQL extends the supported types to records, arrays and domains.
+- `json_representation` could be only `json`, so `FORMAT` is implemented only for the standard compatibility.
+- The standard requires `character_string_literal` in `json_path_specification`,  PostgreSQL extends `json_path_specification` to a separate data type `jsonpath`.
 
 
-### JSON_OBJECT - construct a JSON[b] object
+### `JSON_OBJECT` - construct a JSON\[b\] object
 
-Internally transformed into a json[b]_build_object call.
+Internally transformed into a `json[b]_build_object()` call depending on `RETURNING` type.
 Syntax:
 ```
 JSON_OBJECT (
@@ -630,11 +645,11 @@ JSON_OBJECT (
 json_value_expression ::= expression [ FORMAT JSON ]
 ```
 
-- RETURNING type:
--- jsonb_build_object() is used for  RETURNING jsonb
--- json_build_object() - for other types
-- Key uniqueness check: {WITH|WITHOUT} UNIQUES [KEYS]
-- ability to omit keys with NULL values: {ABSENT|NULL} ON NULL
+- `RETURNING` type:
+-- `jsonb_build_object()` is used for `RETURNING jsonb`
+-- `json_build_object()` - for other types
+- Key uniqueness check: `{WITH|WITHOUT} UNIQUES [KEYS]`
+- ability to omit keys with NULL values: `{ABSENT|NULL} ON NULL`
 
 Examples:
 
@@ -680,7 +695,6 @@ SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5)->'no' AS no;
  5
 (1 row)
 
-
 -- jsonb: fields are ordered, duplicate fields removed
 SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL RETURNING jsonb) AS apt;
                  apt                 
@@ -704,8 +718,8 @@ SELECT JSON_OBJECT('area' : 20 + 30, 'rooms': 2, 'no': 5, 'area' : NULL ABSENT O
 ERROR:  duplicate JSON key "area"
 ```
 
-### JSON_OBJECTAGG - aggregates name/value pairs  as JSON[b] object
-JSON_OBJECTAGG is transformed into a json[b]_object_agg depending on RETURNING type.
+### `JSON_OBJECTAGG` - aggregates name/value pairs  as JSON\[b\] object
+`JSON_OBJECTAGG` is transformed into a `json[b]_object_agg()` call depending on `RETURNING` type.
 Syntax:
 ```
 JSON_OBJECTAGG (
@@ -715,7 +729,7 @@ JSON_OBJECTAGG (
   [ RETURNING data_type [ FORMAT JSON ] ]
 )
 ```
-Options and RETURNING clause are the same as in JSON_OBJECT.
+Options and `RETURNING` clause are the same as in `JSON_OBJECT`.
 
 Examples:
 ```sql
@@ -734,8 +748,8 @@ FROM (VALUES ('no', 5), ('area', 50), ('rooms', 2), ('foo', NULL)) kv(k, v);
 (1 row)
 ```
 
-### JSON_ARRAY - construct a JSON[b] array
-Internally transformed into a json[b]_build_array() call.
+### `JSON_ARRAY` - construct a JSON\[b\] array
+Internally transformed into a `json[b]_build_array()` call depending on `RETURNING` type.
 Syntax:
 ```
 JSON_ARRAY (
@@ -749,8 +763,8 @@ JSON_ARRAY (
   [ RETURNING data_type [ FORMAT JSON ] ]
 )SQL/JSON path expression finds
 ```
-Options and RETURNING clause are the same as in JSON_OBJECT.
-Note: ON NULL clause is not supported in subquery variant.
+Options and `RETURNING` clause are the same as in `JSON_OBJECT`.
+Note: `ON NULL` clause is not supported in subquery variant.
 
 Examples:
 ```sql
@@ -785,8 +799,8 @@ SELECT JSON_ARRAY(
 (1 row)
 
 ```
-### JSON_ARRAYAGG - aggregates values as JSON[b] array
-Internally transformed into a json[b]\_agg() call.
+### `JSON_ARRAYAGG` - aggregates values as JSON\[b\] array
+Internally transformed into a `json[b]_agg()` call depending on `RETURNING` type.
 Syntax:
 ```
 JSON_ARRAYAGG (
@@ -902,9 +916,9 @@ FROM (
 
 ```
 
-### JSON_EXISTS - determines whether a JSON value satisfies a search criterion
+### `JSON_EXISTS` - determines whether a JSON value satisfies a search criterion
 
-JSON_EXISTS is a predicate, that can be used to  test whether an SQL/JSON path expression returns one or more  SQL/JSON items.
+`JSON_EXISTS` is a predicate, that can be used to  test whether an SQL/JSON path expression returns one or more  SQL/JSON items.
 
 Syntax:
 ```
@@ -913,7 +927,7 @@ JSON_EXISTS (
 	[ { TRUE | FALSE | UNKNOWN | ERROR } ON ERROR ]
 )
 ```
-Default is FALSE ON ERROR.
+Default is `FALSE ON ERROR`.
 
 Examples:
 ```sql
@@ -928,7 +942,7 @@ SELECT JSON_EXISTS(jsonb '{"a": [1,2,3]}', 'strict $.a[*] ? (@ > 2)');
 -------------
  t
 (1 row)
---  Using non-constant JSOP path
+--  Using non-constant JSON path
 SELECT JSON_EXISTS(jsonb '{"a": 123}', '$' || '.' || 'a');
  json_exists
 -------------
@@ -944,7 +958,7 @@ SELECT JSON_EXISTS(jsonb '{"a": [1,2,3]}', 'lax $.a[5]' ERROR ON ERROR);
 (1 row)
 ```
 
-###  <a name="json_value"></a>JSON_VALUE - extracts a scalar JSON value  and returns it as a native SQL type
+###  <a name="json_value"></a>`JSON_VALUE` - extracts a scalar JSON value  and returns it as a native SQL type
 
 Syntax:
 ```
@@ -991,6 +1005,7 @@ SELECT JSON_VALUE('null', '$' RETURNING int ERROR ON ERROR);
 ------------
  (null)
 (1 row)
+
 SELECT JSON_VALUE('"03:04 2015-02-01"', '$.datetime("HH24:MI YYYY-MM-DD")' RETURNING date);
  json_value 
 ------------
@@ -999,12 +1014,11 @@ SELECT JSON_VALUE('"03:04 2015-02-01"', '$.datetime("HH24:MI YYYY-MM-DD")' RETUR
 
 SELECT JSON_VALUE('"03:04 2015-02-01"', '$' RETURNING date ERROR ON ERROR);
 ERROR:  invalid input syntax for type date: "03:04 2015-02-01"
-
 ```
 
-### JSON_QUERY - extracts a part  of JSON document and returns it as a JSON string
+### `JSON_QUERY` - extracts a part  of JSON document and returns it as a JSON string
 
-JSON_QUERY uses SQL/JSON path expression to extract a part[s] of JSON document. Since it should return a JSON string,  multiple parts should be wrapped   into an array  (`WRAPPER`) or the function should raise an exception.
+`JSON_QUERY` uses SQL/JSON path expression to extract a part\[s\] of JSON document. Since it should return a JSON string,  multiple parts should be wrapped   into an array  (`WRAPPER`) or the function should raise an exception.
 
 Syntax:
 ```
@@ -1037,33 +1051,34 @@ FROM
  [1, null, "2"] | (null)    | [1, null, "2"] | [1, null, "2"]
 (5 rows)
 ```
-Quotes behavior (KEEP by default):
+Quotes behavior (`KEEP` by default):
 ```sql
 SELECT JSON_QUERY(jsonb '"aaa"', '$' RETURNING text);
  json_query 
 ------------
  "aaa"
 (1 row)
-SELECT JSON_QUERY(jsonb '"aaa"', 'strict $' RETURNING text OMIT QUOTES);
+
+SELECT JSON_QUERY(jsonb '"aaa"', '$' RETURNING text OMIT QUOTES);
  json_query
 ------------
  aaa
 (1 row)
 ```
 
-### JSON_TABLE - query a JSON text and present the results as a relational table
+### `JSON_TABLE` - query a JSON text and present the results as a relational table
 
-JSON_TABLE creates a relational view of JSON data.  It can be used only in FROM clause. 
+`JSON_TABLE` creates a relational view of JSON data.  It can be used only in `FROM` clause. 
 
- JSON_TABLE  has several parameters:
+`JSON_TABLE`  has several parameters:
 
 1) The JSON value on which to operate.
 2) An SQL/JSON path expression to specify zero or more rows. This  row pattern path expression is intended to produce an SQL/JSON sequence, with one SQL/JSON item for each row of the output table.
-3) A COLUMNS clause to specify the schema of the output table. The COLUMNS can be nested.  The path expressions used in COLUMNS specification decompose SQL/JSON item on columns.
-4) Optionally, JSON_TABLE can have PLAN clause, which specifies how to join nested columns.
+3) A `COLUMNS` clause to specify the schema of the output table. The `COLUMNS` can be nested.  The path expressions used in `COLUMNS` specification decompose SQL/JSON item on columns.
+4) Optionally, `JSON_TABLE` can have `PLAN` clause, which specifies how to join nested columns.
 
 
-JSON_TABLE internally uses XML_TABLE infrastructure (slightly modified).
+`JSON_TABLE` internally uses `XMLTABLE` infrastructure (slightly modified).
 
 Syntax:
 ```
@@ -1116,11 +1131,11 @@ json_table_plan_primary ::=
 
 JSON_TABLE uses the row pattern  path expression to extract the parts of input document and decompose them to the columns using COLUMNS clause (schema) , optionaly using PLAN clause.  COLUMNS clause specifies path expressions for  each column, which evaluated on the extracted parts to produce columns values.  
 
-The rows created by a  JSON_TABLE  are laterally joined, implicitly, to the row that generated them, so   there is no need to explicitly join a view produced by  JSON_TABLE  with the original table.
+The rows created by a  `JSON_TABLE`  are laterally joined, implicitly, to the row that generated them, so   there is no need to explicitly join a view produced by  JSON_TABLE  with the original table.
 
-The COLUMNS clause can define several kinds of columns: ordinality columns, regular columns, formatted columns and nested columns .  
+The `COLUMNS` clause can define several kinds of columns: ordinality columns, regular columns, formatted columns and nested columns.
 
-In the following example, JSON_TABLE generates rows,  which obtained by matching the path expression `$.floor[*]` to input documents represented by `js`, laterally joined  to the table `house`.  Each generated row has columns defined by path expressions ( relative to the parent row path expression `$.floor[*]` ) in  COLUMN clause:
+In the following example, `JSON_TABLE` generates rows,  which obtained by matching the path expression `$.floor[*]` to input documents represented by `js`, laterally joined  to the table `house`.  Each generated row has columns defined by path expressions ( relative to the parent row path expression `$.floor[*]` ) in  `COLUMNS` clause:
  column  `level`  obtained by **implicit** path  `$.level`, column `num_apt`  and column `apts` explicitly defined by corresponding path expressions.  
 ```sql
 -- basic example: regular and formatted columns, paths
@@ -1159,7 +1174,7 @@ FROM
   4 |  5 |     2
 (4 rows)
 ```
-A regular column supports columns of scalar type. The column is produced using the semantics of JSON_VALUE, so it is possible to specify all  behavior clauses of JSON_VALUE, for example,  an optional ON EMPTY and ON ERROR clauses.
+A regular column supports columns of scalar type. The column is produced using the semantics of `JSON_VALUE`, so it is possible to specify all  behavior clauses of `JSON_VALUE`, for example,  an optional `ON EMPTY` and `ON ERROR` clauses.
 
  The column has an **optional** path expression, called the column pattern, which can be defaulted from the column name. The column pattern is used to search for the column within the current SQL/JSON item produced by the row pattern. 
 ```sql
@@ -1275,7 +1290,7 @@ FROM
   ) ERROR ON ERROR) jt;
 ERROR:  SQL/JSON member not found
 ```
-Formatted columns are used for returning of composite SQL/JSON items, they internally transformed into JSON_QUERY,  so it is possible to specify all  behavior clauses of JSON_QUERY, for example,  an optional ON EMPTY and ON ERROR clauses.
+Formatted columns are used for returning of composite SQL/JSON items, they internally transformed into `JSON_QUERY`,  so it is possible to specify all  behavior clauses of `JSON_QUERY`, for example,  an optional `ON EMPTY` and `ON ERROR` clauses.
 ```sql
 SELECT
   jt.*
@@ -1314,7 +1329,7 @@ FROM
   ) ERROR ON ERROR) jt;
 ERROR:  SQL/JSON scalar required
 ```
-The nested COLUMNS clause begins with the keyword NESTED, followed by a path and an optional path name. The path provides a refined context for the nested columns. The primary use of the path name is if the user wishes to specify an explicit plan. After the prolog to specify the path and path name, there is a COLUMNS clause, which has the same capabilities already considered. The NESTED clause allows unnesting of (even deeply) nested JSON objects/arrays in one invocation rather than chaining several JSON_TABLE expressions in the SQL-statement.  
+The nested `COLUMNS` clause begins with the keyword `NESTED`, followed by a path and an optional path name. The path provides a refined context for the nested columns. The primary use of the path name is if the user wishes to specify an explicit plan. After the prolog to specify the path and path name, there is a `COLUMNS` clause, which has the same capabilities already considered. The `NESTED` clause allows unnesting of (even deeply) nested JSON objects/arrays in one invocation rather than chaining several `JSON_TABLE` expressions in the SQL-statement.  
 
 ```sql
 -- nested columns (1-level)
@@ -1340,11 +1355,11 @@ FROM
      2 |  5 |     60 |     2
 (5 rows)
 ```
-Every path may be followed by a path name using an AS clause. Path names are identifiers and must be unique and don't coincide with the column names. Path names are used in the PLAN clause to express the desired output plan. PLAN clause could be INNER, OUTER, UNION and CROSS, which correspond to INNER JOIN, LEFT OUTER JOIN, FULL OUTER JOIN and CROSS JOIN respectively.  If there is an explicit PLAN clause, all path names must be explicit and appear in the PLAN clause exactly once.
+Every path may be followed by a path name using an `AS` clause. Path names are identifiers and must be unique and don't coincide with the column names. Path names are used in the `PLAN` clause to express the desired output plan. `PLAN` clause could be `INNER`, `OUTER`, `UNION` and `CROSS`, which correspond to `INNER JOIN`, `LEFT OUTER JOIN`, `FULL OUTER JOIN` and `CROSS JOIN` respectively.  If there is an explicit `PLAN` clause, all path names must be explicit and appear in the `PLAN` clause exactly once.
 
-INNER and OUTER  (default) are used for parent/child relationship and it is mandatory to specify the first operand (path name in AS clause) and it must be an ancestor of all path names in the second operand. 
+`INNER` and `OUTER`  (default) are used for parent/child relationship and it is mandatory to specify the first operand (path name in `AS` clause) and it must be an ancestor of all path names in the second operand. 
 
-UNION expresses semantics of a FULL OUTER JOIN and is default with sibling relationship.
+`UNION` expresses semantics of a `FULL OUTER JOIN` and is default with sibling relationship.
 
 
 ```sql
@@ -1436,7 +1451,7 @@ FROM
      2 | (null) |      5
 (10 rows)
 ```
- PLAN DEFAULT (INNER) is equivalent to explicit PLAN clause.
+ `PLAN DEFAULT (INNER)` is equivalent to explicit `PLAN` clause.
  
 ```sql
 SELECT
@@ -1467,7 +1482,7 @@ FROM
 -------+----
 (0 rows)
 ```
-PLAN DEFAULT (CROSS) is equivalent to explicit PLAN clause for sibling columns.
+`PLAN DEFAULT (CROSS)` is equivalent to explicit `PLAN` clause for sibling columns.
 ```sql
 SELECT
   jt.*
@@ -1528,7 +1543,7 @@ FROM
      2 |   5 |   5
 (13 rows)
 ```
-Combination of OUTER/INNER and UNION/CROSS joins:
+Combination of `OUTER`/`INNER` and `UNION`/`CROSS` joins:
 ```sql
 -- OUTER, UNION is the same as INNER, UNION
 SELECT
@@ -1697,16 +1712,16 @@ FROM
 
 - `like_regex` supports posix regular expressions,  while the  standard requires xquery regexps.
 -  Not supported (due to unresolved conflicts in SQL grammar):
-   - expr FORMAT JSON IS [NOT] JSON
-   - JSON_OBJECT(KEY key VALUE value, ...)
-   - JSON_ARRAY(SELECT ... FORMAT JSON ...)
-   - JSON_ARRAY(SELECT ... (ABSENT|NULL) ON NULL ...)
-  -  json_path_specification extended  to be an expression of jsonpath type. The standard requires  it `character_string_literal`.
+   - `expr FORMAT JSON IS [NOT] JSON`
+   - `JSON_OBJECT(KEY key VALUE value, ...)`
+   - `JSON_ARRAY(SELECT ... FORMAT JSON ...)`
+   - `JSON_ARRAY(SELECT ... (ABSENT|NULL) ON NULL ...)`
+   - `json_path_specification` extended to be an expression of `jsonpath` type. The standard requires  it `character_string_literal`.
 -  Use boolean  expression on the path, PostgreSQL extension
--  Default timezone added to `datetime()` as second argument. That helped to keep jsonpath operators and functions to be immutable.
+-  Default timezone added to `datetime()` as second argument. That helped to keep `jsonpath` operators and functions to be immutable.
 - `.**`  - recursive wildcard member accessor, PostgreSQL extension
-- json[b] op jsonpath - PostgreSQL extension
-- [path] - wrap SQL/JSON sequences into an array - PostgreSQL extension
+- `json[b] op jsonpath` - PostgreSQL extension
+- `[path]` - wrap SQL/JSON sequences into an array - PostgreSQL extension
 
 
  ## Links
