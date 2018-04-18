@@ -198,7 +198,7 @@ The results is depends on the size of the resulted SQL/JSON sequence:
 --  empty sequence - returns SQL NULL;
 -- single item - returns the item;
 -- more items - returns an array of items.
-Notice, that this  behaviour differs from `WITH CONDITIONAL WRAPPER`, since the latter wraps into array a single scalar value, but not the single object or an array.
+Notice, that such behaviour differs from `WITH CONDITIONAL WRAPPER`, since the latter wraps into array a single scalar value, but not the single object or an array.
 
 ```sql
 SELECT js @*  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
@@ -1749,5 +1749,5 @@ eyJoaXN0b3J5IjpbNTgwMjQzOTRdfQ==
 eyJoaXN0b3J5IjpbMTc1MzY5NjI5Ml19
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTc5MTAyMzAyNF19
+eyJoaXN0b3J5IjpbLTEzMjk5MDE1NjldfQ==
 -->
