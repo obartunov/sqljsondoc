@@ -566,11 +566,14 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 - `.**`  - recursive wildcard member accessor, PostgreSQL extension
 - `json[b] op jsonpath` - PostgreSQL extension
 
-
-| SQL/JSON feature | PostgreSQL | Oracle  | MySQL  | SQL Server |
-|                  |     12     |    18c  |  8.0.4 |     2017   |     
-|:-----------------|------------|---------|--------|------------|
-| JSON Path: 15    |     14/15  |  11/15  |  5/15  |     2/15   |
+<table>
+<tr>
+<td>SQL/JSON feature</td><td>PostgreSQL 12</td><td>Oracle 18c</td><td>MySQL 8.0.4</td><td> SQL Server 2017</td>
+</tr>
+<tr>
+<td>JSON Path: 15</td><td>14/15</td><td> 11/15</td><td>5/15</td><td>2/15</td>
+</tr>
+</table>
 
  ## Links
 * Github Postgres Professional repository
