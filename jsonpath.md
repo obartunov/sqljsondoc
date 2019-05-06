@@ -165,7 +165,12 @@ jsonb_path_xxx(
 SELECT jsonb_path_query_array('[1,2,3,4,5]', '$[*] ? (@ > $x)', vars => '{"x": 2}');
  jsonb_path_query_array 
 ------------------------
- [3, 4, 5] 
+ [3, 4, 5]
+ -- comparison with any element of $x: @ ? $x[0] || @ > $x[1]
+ SELECT jsonb_path_query_array('[1,2,3,4,5]', '$[*] ? (@ > $x[*])', vars => '{"x": [3, 2]}');
+ jsonb_path_query_array 
+------------------------
+ [3, 4, 5]
 ```
 
 `silent` flag enables suppression of errors:
@@ -386,7 +391,7 @@ In more complex case,  we can wrap SQL/JSON sequence into an array and apply `.s
  {"id": 80, "key": "z", "value": 789}
 (3 rows)
 ```
-`id` of `key,value` pair generates using offset of object in jsonb.
+`id` is a PostgreSQL specific identificator of `key,value` pair.
 ```sql
 SELECT jsonb_path_query( '{"a": {"x": 123, "y": 456}, "c": {"z": 789}}', '$.*.keyvalue()');
            jsonb_path_query
@@ -562,6 +567,10 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 - `json[b] op jsonpath` - PostgreSQL extension
 
 
+| SQL/JSON feature | PostgreSQL | Oracle  | MySQL  | SQL Server |
+|                  |     12     |    18c  |  8.0.4 |     2017   |     
+|:-----------------|------------|---------|--------|------------|
+| JSON Path: 15    |     14/15  |  11/15  |  5/15  |     2/15   |
 
  ## Links
 * Github Postgres Professional repository
