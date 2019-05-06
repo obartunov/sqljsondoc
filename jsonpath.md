@@ -567,11 +567,11 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 - `json[b] op jsonpath` - PostgreSQL extension
 
 <table style="float:right">
-<tr align="center">
+<tr>
 <td>SQL/JSON feature</td><td>PostgreSQL 12</td><td>Oracle 18c</td><td>MySQL 8.0.4</td><td> SQL Server 2017</td>
 </tr>
 <tr>
-<td>JSON Path: 15</td><td>14/15</td><td> 11/15</td><td>5/15</td><td>2/15</td>
+<td>JSON Path (15)</td align="center"><td align="center">14/15</td><td align="center"> 11/15</td><td align="center">5/15</td><td align="center">2/15</td>
 </tr>
 </table>
 
