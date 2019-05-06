@@ -1,5 +1,5 @@
 # Gentle Guide to JSONPATH in PostgreSQL
-
+<meta property="og:image" content="https://raw.githubusercontent.com/obartunov/sqljsondoc/master/slon-json.png" >
 <img src="slon-json.png"
      alt="Slon with json-ish trunk"
      align="left" width=400
@@ -236,55 +236,6 @@ js @@ '$.a == 1' <=>  js @? '$ ? ($.a == 1)'
 ```
 
 The performance of `jsonb @? jsonpath` and `jsonb @@ jsonpath` are the same as `jsonb @> jsonb`  (for equality operation), but `jsonpath` supports more complex expressions.
-
-#### Indexing ####
-
-Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses (one can use existing indexes).
-
-To run examples first download `http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz`, load it into PostgreSQL and create index:
-```sql 
-1. curl -O http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz
-2. zcat bookmarks.jsonb.sql.gz | psql
-3. CREATE index ON bookmarks USING gin(jb jsonb_path_ops); 
-```
-Examples:
-```sql
-EXPLAIN (analyze, costs off) 
-SELECT COUNT(*) FROM bookmarks
-WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
-                                           QUERY PLAN
-------------------------------------------------------------------------------------------------
- Aggregate (actual time=0.608..0.608 rows=1 loops=1)
-   ->  Bitmap Heap Scan on bookmarks (actual time=0.121..0.578 rows=285 loops=1)
-         Recheck Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
-         Heap Blocks: exact=285
-         ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual time=0.082..0.082 rows=285 loops=1)
-               Index Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
- Planning Time: 0.072 ms
- Execution Time: 0.642 ms
-(8 rows)
-
-EXPLAIN (analyze, costs off) 
-SELECT COUNT(*) FROM bookmarks
-WHERE jb @@ '$.tags[*].term == "NYC"';
-                                           QUERY PLAN
-------------------------------------------------------------------------------------------------
- Aggregate (actual time=0.676..0.676 rows=1 loops=1)
-   ->  Bitmap Heap Scan on bookmarks (actual time=0.125..0.645 rows=285 loops=1)
-         Recheck Cond: (jb @@ '($."tags"[*]."term" == "NYC")'::jsonpath)
-         Heap Blocks: exact=285
-         ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual time=0.087..0.087 rows=285 loops=1)
-               Index Cond: (jb @@ '($."tags"[*]."term" == "NYC")'::jsonpath)
- Planning Time: 0.067 ms
- Execution Time: 0.710 ms
-(8 rows)
-```
-
-`Jsquery` extension (sqljson branch) provides additional GIN opclasses for jsonpath:
-* `jsonb_path_value_ops` - best for exact and range queries
-* `jsonb_laxpath_value_ops` - the same as above, but skips array path items from the hashing and greatly simplifies extraction of lax JSON path queries. 
-* `jsonb_value_path_ops` - good for exact queries and 
-
 
 ### Path modes
 
@@ -563,6 +514,76 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
  [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
 (1 row)
 ```
+#### Indexing ####
+
+Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses (one can use existing indexes).
+
+To run examples first download `http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz`, load it into PostgreSQL and create index:
+```sql 
+1. curl -O http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz
+2. zcat bookmarks.jsonb.sql.gz | psql
+3. CREATE index ON bookmarks USING gin(jb jsonb_path_ops); 
+```
+Examples:
+```sql
+EXPLAIN (analyze, costs off) 
+SELECT COUNT(*) FROM bookmarks
+WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
+                                           QUERY PLAN
+------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.608..0.608 rows=1 loops=1)
+   ->  Bitmap Heap Scan on bookmarks (actual time=0.121..0.578 rows=285 loops=1)
+         Recheck Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
+         Heap Blocks: exact=285
+         ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual time=0.082..0.082 rows=285 loops=1)
+               Index Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
+ Planning Time: 0.072 ms
+ Execution Time: 0.642 ms ( seqscan 1000 ms, speedup ~ 1500 )
+(8 rows)
+
+
+```
+
+Find all authors with the same bookmarks as the given author (join query):
+
+```sql
+EXPLAIN (ANALYZE, COSTS OFF, TIMING OFF)
+SELECT
+  b1.jb->'author'
+FROM
+  bookmarks b1,
+  bookmarks b2
+WHERE
+  b1.jb @@ format('$.title == %s && $.author != %s', b2.jb -> 'title', b2.jb -> 'author')::jsonpath AND
+  b2.jb @@ '$.author == "ant.on"'::jsonpath;
+  QUERY PLAN
+--------------------------------------------------------------------------------------------------------
+   Gather (actual rows=1222 loops=1)
+   Workers Planned: 1
+   Workers Launched: 1
+   ->  Nested Loop (actual rows=611 loops=2)
+         ->  Parallel Bitmap Heap Scan on bookmarks b2 (actual rows=5 loops=2)
+               Recheck Cond: (jb @@ '($."author" == "ant.on")'::jsonpath)
+               Heap Blocks: exact=3
+               ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual rows=10 loops=1)
+                     Index Cond: (jb @@ '($."author" == "ant.on")'::jsonpath)
+         ->  Bitmap Heap Scan on bookmarks b1 (actual rows=122 loops=10)
+               Recheck Cond: (jb @@ (format('$.title == %s && $.author != %s'::text, (b2.jb -> 'title'::text), (b2.jb -> 'author'::text)))::jsonpath)
+               Rows Removed by Index Recheck: 1
+               Heap Blocks: exact=1138
+               ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual rows=123 loops=10)
+                     Index Cond: (jb @@ (format('$.title == %s && $.author != %s'::text, (b2.jb -> 'title'::text), (b2.jb -> 'author'::text)))::jsonpath)
+ Planning Time: 0.169 ms
+ Execution Time: 7.707 ms (seqscan 35310.417 ms, speedup ~ 4600 )
+(17 rows)
+
+```
+
+`Jsquery` extension (sqljson branch) provides additional GIN opclasses for jsonpath:
+* `jsonb_path_value_ops` - best for exact and range queries
+* `jsonb_laxpath_value_ops` - the same as above, but skips array path items from the hashing and greatly simplifies extraction of lax JSON path queries. 
+* `jsonb_value_path_ops` - good for exact queries and 
+
 
 ## SQL/JSON conformance
 
@@ -572,6 +593,19 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 - `.**`  - recursive wildcard member accessor, PostgreSQL extension.
 - `json[b] op jsonpath` - PostgreSQL extension.
 - `datetime` is not supported in PostgreSQL 12.
+```sql
+-- behavior required by standard
+SELECT jsonb_path_query('"13.03.2019"', '$.datetime("DD.MM.YYYY")');
+ jsonb_path_query 
+------------------
+ "2019-03-13"
+(1 row)
+
+-- behavior of PostgreSQL 12
+SELECT jsonb_path_query('"13.03.2019"', '$.datetime("DD.MM.YYYY")');
+ERROR:  bad jsonpath representation
+```
+
 
 PostgreSQL 12 has __the best__ implementation of JSON Path.
 
