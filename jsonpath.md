@@ -1,5 +1,6 @@
 ## About this document
 
+(slon-json.png)
 This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON PATH - the json query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a "Gentle Guide to JSONPATH in PostgreSQL", the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
 
 ## Introduction to SQL/JSON
@@ -409,7 +410,7 @@ SELECT jsonb_path_query( '{"a":{"b":[1,2]}, "c":1}','$.**{2 to last}');
 ```
    
  ### Filter expression
-A filter expression is similar to a `WHERE` clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
+A filter expression is similar to `WHERE` clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
 
 Within a filter, the special variable `@` is used to reference the current SQL/JSON item in the SQL/JSON sequence.
 
@@ -423,34 +424,33 @@ The SQL/JSON path language has the following predicates:
 
 JSON literals `true, false` are parsed into the SQL/JSON model as the SQL boolean values `True` and `False`. 
 ```sql
-SELECT JSON_VALUE(jsonb 'true','$ ? (@ == true)') FROM house;
- json_value
-------------
+SELECT jsonb_path_query(jsonb 'true','$ ? (@ == true)') FROM house;
+ jsonb_path_query
+------------------
  true
 (1 row)
-SELECT jsonb '{"g": {"x": 2}}' @* '$.g ? (exists (@.x))';
- ?column?
-----------
+SELECT jsonb_path_query(jsonb '{"g": {"x": 2}}','$.g ? (exists (@.x))');
+ jsonb_path_query
+------------------
  {"x": 2}
 (1 row)
 ```
 JSON literal `null` is parsed into the special SQL/JSON value `null`, which differs from SQL NULL, for example, SQL JSON `null` is equal to itself, so the result of `null == null` is `True`.
 ```sql
-SELECT JSON_QUERY('1', '$ ? (null == null)');
- json_query
-------------
- 1
+SELECT jsonb_path_exists('1', '$ ? (null == null)');
+ jsonb_path_exists
+-------------------
+ t
 (1 row)
-SELECT JSON_QUERY('1', '$ ? (null != null)');
- json_query
-------------
- (null)
-(1 row)
+SELECT jsonb_path_query('1', '$ ? (null != null)');
+ jsonb_path_query
+------------------
+(0 rows)
 ``` 
 Prefix search with `starts with` example:
 ```sql
-SELECT js @* '$.** ? (@ starts with "11")' FROM house;
-            ?column?
+SELECT jsonb_path_query(js, '$.** ? (@ starts with "11")') from house;
+        jsonb_path_query
 ---------------------------------
  "117036, Dmitriya Ulyanova, 7A"
 (1 row)
@@ -458,27 +458,27 @@ SELECT js @* '$.** ? (@ starts with "11")' FROM house;
 Regular expression search:
 ```sql
 -- case insensitive
-SELECT js @* '$.** ? (@ like_regex "O(w|v)" flag "i")' FROM house;
-            ?column?
+SELECT jsonb_path_query(js, '$.** ? (@ like_regex "O(w|v)" flag "i")') from house;
+        jsonb_path_query
 ---------------------------------
  "Moscow"
  "117036, Dmitriya Ulyanova, 7A"
 (2 rows)
 -- ignore spaces in query, flag "x"
-SELECT js @* '$.** ? (@ like_regex "O w|o V" flag "ix")' FROM house;
-            ?column?
+SELECT jsonb_path_query(js, '$.** ? (@ like_regex "O w|o V" flag "ix")') from house;
+        jsonb_path_query
 ---------------------------------
  "Moscow"
  "117036, Dmitriya Ulyanova, 7A"
 (2 rows)
 -- single-line mode, flag "s".
-SELECT js @* '$.** ? (@ like_regex "^info@" flag "is")' FROM house;
- ?column?
-----------
+SELECT jsonb_path_query(js, '$.** ? (@ like_regex "^info@" flag "is")') from house;
+ jsonb_path_query
+------------------
 (0 rows)
 -- multi-line mode, flag "m"
-SELECT js @* '$.** ? (@ like_regex "^info@" flag "im")' FROM house;
-                             ?column?
+SELECT jsonb_path_query(js, '$.** ? (@ like_regex "^info@" flag "im")') from house;
+                         jsonb_path_query
 ------------------------------------------------------------------
  "Postgres Professional\n+7 (495) 150-06-91\ninfo@postgrespro.ru"
 (1 row)
@@ -487,8 +487,8 @@ SELECT js @* '$.** ? (@ like_regex "^info@" flag "im")' FROM house;
 
 Predicate `is unknown` can be used to filter "problematic" SQL/JSON items. Notice, that filter expression automatically unwraps array `apt`, since default mode is `lax`.
 ```sql
-SELECT js @* '$.floor.apt ? ((@.area / @.rooms > 0))' FROM house;
-              ?column?
+SELECT jsonb_path_query(js,'$.floor.apt ? ((@.area / @.rooms > 0))') from house;
+          jsonb_path_query
 ------------------------------------
  {"no": 1, "area": 40, "rooms": 1}
  {"no": 2, "area": 80, "rooms": 3}
@@ -496,8 +496,8 @@ SELECT js @* '$.floor.apt ? ((@.area / @.rooms > 0))' FROM house;
  {"no": 5, "area": 60, "rooms": 2}
 (4 rows)
 -- what item was rejected by a filter ?
-SELECT js @* '$.floor.apt ? ((@.area / @.rooms > 0) is unknown)' FROM house;
-              ?column?
+SELECT jsonb_path_query(js,'$.floor.apt ? ((@.area / @.rooms > 0) is unknown)') from house;
+          jsonb_path_query
 -------------------------------------
  {"no": 3, "area": null, "rooms": 2}
 (1 row)
@@ -512,22 +512,12 @@ Path expression is intended to produce an SQL/JSON sequence ( an ordered list of
 at first step produces SQL/JSON sequence of length 1, which is simply json itself - the context item, denoted as `$`.  Next step is member accessor `.floor` - the result is SQL/JSON sequence of length 1 - an array `floor`, which then unwrapped by  wildcard  array element accessor  `[*]` to SQL/JSON sequence of length 2, containing an array of two objects . Next, `.apt`  produces two arrays of objects and `[*]` extracts  SQL/JSON sequence of length 5 ( five objects - appartments), each of which filtered by a filter expression `(@.area > 40 && @.area < 90)`, so a result of the whole path expression  is a sequence of two SQL/JSON items.
 
 ```sql
-SELECT JSON_QUERY(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' WITH WRAPPER) FROM house;
-                               json_query
+SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)') FROM house;
+                         jsonb_path_query_array
 ------------------------------------------------------------------------
  [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
 (1 row)
 ```
-The result by jsonpath set-query operator:
-```sql
-SELECT js @*  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
-             ?column?
------------------------------------
- {"no": 2, "area": 80, "rooms": 3}
- {"no": 5, "area": 60, "rooms": 2}
-(2 rows)
-```
-
 
 ## SQL/JSON conformance
 
@@ -536,7 +526,7 @@ SELECT js @*  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
 -  Use boolean  expression on the path, PostgreSQL extension
 - `.**`  - recursive wildcard member accessor, PostgreSQL extension
 - `json[b] op jsonpath` - PostgreSQL extension
-- `[path]` - wrap SQL/JSON sequences into an array - PostgreSQL extension
+
 
 
  ## Links
