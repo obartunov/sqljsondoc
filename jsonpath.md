@@ -1,5 +1,4 @@
 # Gentle Guide to JSONPATH in PostgreSQL
-<meta property="og:image" content="https://raw.githubusercontent.com/obartunov/sqljsondoc/master/slon-json.png" >
 <img src="slon-json.png"
      alt="Slon with json-ish trunk"
      align="left" width=400
