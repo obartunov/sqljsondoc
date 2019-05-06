@@ -7,6 +7,7 @@
 This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON PATH - the json query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a tutorial , the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
 
 <P>
+
 ## Introduction to SQL/JSON
 
 SQL-2016 standard doesn't describes the JSON data type, but instead it  introduced SQL/JSON data model (not  JSON data type like XML )  with string storage and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.
