@@ -56,7 +56,7 @@ It can be illustrated as a json tree:
 
 <img src="house-json.png"
      alt="json tree"
-     align="left" width=600
+     align="middle" width=800
      style="float: left; margin-right: 10px;" />
 
  Consider the following path expression:
