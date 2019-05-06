@@ -4,7 +4,7 @@
      alt="Slon with json-ish trunk"
      align="left" width=400
      style="float: left; margin-right: 10px;" />
-This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON PATH - the json query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a tutorial , the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
+This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON Path - the JSON query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a tutorial , the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
 
 <P>
 
@@ -12,7 +12,7 @@ This document describes SQL/JSON implementation as committed to PostgreSQL 12, w
 
 SQL-2016 standard doesn't describes the JSON data type, but instead it  introduced SQL/JSON data model (not  JSON data type like XML )  with string storage and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.
 
-PostgreSQL has two JSON  data types - the textual json data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
+PostgreSQL has two JSON  data types - the textual `json` data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
 
 ## SQL/JSON Path language 
 
@@ -119,7 +119,7 @@ SELECT JSON_QUERY( js , '$.floor[*].apt[*].keyvalue() ? (@.key == "no").value' W
 
 ## JSONPATH in PostgreSQL
 
-In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .
+In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path variable, path literal or  expression in parentheses and zero or more operators ( JSON accessors ).
 
 Examples of vaild `jsonpath`:
 ```sql
@@ -151,7 +151,7 @@ An [Example](#how-path-expression-works) of how path expression works.
 * `jsonb_path_query_array()`, returns `jsonb`. Extract a sequence of SQL/JSON items wrapped into JSON array.
 * `jsonb_path_query_first()`, returns `jsonb`. Extract the first SQL/JSON item from a JSON value.
 
-All `jsonb_path_xxx()` functions have the same signture:
+All `jsonb_path_xxx()` functions have the same signature:
 ```sql
 jsonb_path_xxx(
     js jsonb,
@@ -208,7 +208,7 @@ jsonb_path_query_first('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 5)') => NULL
 To accelerate JSON path queries using existing indexes for `jsonb`  (GIN index using built-in  `jsonb_ops` or `jsonb_path_ops`)  PostgreSQL extends the standard with two  boolean operators for `json[b]` and `jsonpath` data types.
 
 * `json[b] @? jsonpath` -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.
-* `json[b] @@ jsonpath` - match operator, returns the result of json path predicate.
+* `json[b] @@ jsonpath` - match operator, returns the result of JSON path predicate.
 
 ```sql
 SELECT js @?  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
@@ -217,7 +217,7 @@ SELECT js @?  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
  t
 (1 row)
 
-SELECT js @@  '$.floor[*].apt[*].area <  20' FROM house;
+SELECT js @@  '$.floor[*].apt[*].area < 20' FROM house;
  ?column?
 ----------
  f
@@ -244,7 +244,8 @@ To run examples first download `http://www.sai.msu.su/~megera/postgres/files/boo
 ```
 Examples:
 ```sql
-EXPLAIN (analyze, costs off) SELECT COUNT(*) FROM bookmarks
+EXPLAIN (analyze, costs off) 
+SELECT COUNT(*) FROM bookmarks
 WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
                                            QUERY PLAN
 ------------------------------------------------------------------------------------------------
@@ -258,7 +259,8 @@ WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
  Execution Time: 0.642 ms
 (8 rows)
 
-EXPLAIN (analyze, costs off) SELECT COUNT(*) FROM bookmarks
+EXPLAIN (analyze, costs off) 
+SELECT COUNT(*) FROM bookmarks
 WHERE jb @@ '$.tags[*].term == "NYC"';
                                            QUERY PLAN
 ------------------------------------------------------------------------------------------------
@@ -344,7 +346,7 @@ __Path elements__
  ~ __item method__ -- is the function, that operate on an SQL/JSON item and return an SQL/JSON item. 
 It denotes as  `.` and could be one of the 8 methods:
 
-  ~ __type()__ - returns a character string that names the type of the SQL/JSON item ( `"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`, `"date"`, `"time without time zone"`, `"time with time zone"`, `"timestamp without time zone"`, `"timestamp with time zone"`).
+  ~ __type()__ - returns a character string that names the type of the SQL/JSON item ( PostgreSQL 12 supports `"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`).
    
   ~ __size()__ -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar in __lax__ mode  and error `ERROR:  SQL/JSON array not found` in __strict__ mode.  
 ```sql
@@ -373,16 +375,38 @@ In more complex case,  we can wrap SQL/JSON sequence into an array and apply `.s
    ~ __`double()`__ - converts a string or numeric to an approximate numeric value.
    ~ __`floor()`__ - the same as `FLOOR` in SQL
    ~ __`abs()`__  - the same as `ABS` in SQL
-   ~ __keyvalue()__ - transforms json to an SQL/JSON sequence of objects with a known schema. Example:
+   ~ __keyvalue()__ - transforms json to an SQL/JSON sequence of objects with a known schema. 
+   Example:
    ```sql
-   SELECT jsonb_path_query( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue()');
-          jsonb_path_query
--------------------------------------
- {"id": 0, "key": "a", "value": 123}
- {"id": 0, "key": "b", "value": 456}
- {"id": 0, "key": "c", "value": 789}
+   SELECT jsonb_path_query( '{"a": {"x": 123}, "b": {"y": 456}, "c": {"z": 789}}', '$.*.keyvalue()');
+           jsonb_path_query
+--------------------------------------
+ {"id": 32, "key": "x", "value": 123}
+ {"id": 56, "key": "y", "value": 456}
+ {"id": 80, "key": "z", "value": 789}
 (3 rows)
 ```
+`id` of `key,value` pair generates using offset of object in jsonb.
+```sql
+SELECT jsonb_path_query( '{"a": {"x": 123, "y": 456}, "c": {"z": 789}}', '$.*.keyvalue()');
+           jsonb_path_query
+--------------------------------------
+ {"id": 24, "key": "x", "value": 123}
+ {"id": 24, "key": "y", "value": 456}
+ {"id": 64, "key": "z", "value": 789}
+(3 rows)
+
+ -- reconstruct objects grouping by "id"
+SELECT json_object_agg(kv->>'key', kv->'value') FROM 
+jsonb_path_query( '{"a": {"x": 123, "y": 456}, "c": {"z": 789}}', '$.*.keyvalue()') kv 
+GROUP BY kv->'id';
+     json_object_agg
+--------------------------
+ { "x" : 123, "y" : 456 }
+ { "z" : 789 }
+(2 rows)
+```
+
 
  **PostgreSQL extensions**:
    1.  __recursive wildcard member accessor__ -- `.**`,  recursively applies wildcard member accessor `.*` to all levels of hierarchy and returns   the values of **all** attributes of the current object regardless of the level of the hierarchy.  It is possible to specify a level or range of the tree to unwrap -- `.**{2}`, `.**{2 TO LAST}`.
@@ -420,7 +444,7 @@ SELECT jsonb_path_query( '{"a":{"b":[1,2]}, "c":1}','$.**{2 to last}');
 ```
    
  ### Filter expression
-A filter expression is similar to `WHERE` clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
+A filter expression is similar to a `WHERE` clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
 
 Within a filter, the special variable `@` is used to reference the current SQL/JSON item in the SQL/JSON sequence.
 
@@ -543,12 +567,9 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 * Github Postgres Professional repository
 https://github.com/postgrespro/sqljson
 *  WEB-interface to play with SQL/JSON
-http://sqlfiddle.postgrespro.ru/#!21/0/2580
-* Try SQL/JSON on your android phone 
-https://obartunov.livejournal.com/199005.html
-*  SQL/JSON standard-2016 conformance for PostgreSQL, Oracle, SQL Server and MySQL
- https://obartunov.livejournal.com/200076.html
 * Technical Report (SQL/JSON) - available for free
 http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip
+* Jsquery - PostgreSQL extension for json
+https://github.com/postgrespro/jsquery/tree/sqljson
 * Jsonb roadmap - talk at PGConf.eu, 2018
 http://www.sai.msu.su/~megera/postgres/talks/sqljson-pgconf.eu-2017.pdf
