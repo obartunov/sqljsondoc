@@ -1,6 +1,6 @@
 ## About this document
 
-This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of realization of JSON PATH - the json query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a "Gentle Guide to JSONPATH in PostgreSQL", the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
+This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON PATH - the json query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a "Gentle Guide to JSONPATH in PostgreSQL", the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
 
 ## Introduction to SQL/JSON
 
@@ -212,9 +212,26 @@ SELECT js @@  '$.floor[*].apt[*].area <  20' FROM house;
  f
 (1 row)
 ```
-`jsonb @? jsonpath` and `jsonb @@ jsonpath` are as fast as `jsonb @> jsonb`  (for equality operation),  but  `jsonpath` supports more complex expressions.
 
-Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses.
+* Operators `@?` and `@@` are interchangeable:
+```sql
+js @? '$.a'      <=>  js @@ 'exists($.a)'
+js @@ '$.a == 1' <=>  js @? '$ ? ($.a == 1)'
+```
+
+The performance of `jsonb @? jsonpath` and `jsonb @@ jsonpath` are the same as `jsonb @> jsonb`  (for equality operation), but `jsonpath` supports more complex expressions.
+
+#### Indexing ####
+
+Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses (one can use existing indexes).
+
+To run examples first download `http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz`, load it into PostgreSQL and create index:
+```sql 
+1. curl -O http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz
+2. zcat bookmarks.jsonb.sql.gz | psql
+3. CREATE index ON bookmarks USING gin(jb jsonb_path_ops); 
+```
+Examples:
 ```sql
 EXPLAIN (analyze, costs off) SELECT COUNT(*) FROM bookmarks
 WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
@@ -245,88 +262,48 @@ WHERE jb @@ '$.tags[*].term == "NYC"';
 (8 rows)
 ```
 
-Query operators:
-
-* `json[b] @* jsonpath` - set-query operator,  returns `setof json[b]`.
-* `json[b] @# jsonpath` - singleton-query operator,  returns a single `json[b]`.
-The results is depends on the size of the resulted SQL/JSON sequence:
---  empty sequence - returns SQL NULL;
--- single item - returns the item;
--- more items - returns an array of items.
-Notice, that such behaviour differs from `WITH CONDITIONAL WRAPPER`, since the latter wraps into array a single scalar value, but not the single object or an array.
-
-```sql
-SELECT js @*  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
-             ?column?
------------------------------------
- {"no": 2, "area": 80, "rooms": 3}
- {"no": 5, "area": 60, "rooms": 2}
-(2 rows)
-
-SELECT js @#  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
-                                ?column?
-------------------------------------------------------------------------
- [{"no": 2, "area": 80, "rooms": 3}, {"no": 5, "area": 60, "rooms": 2}]
-(1 row)
-```
-Operator `@#` can be used to index `jsonb`:
-```sql
-CREATE INDEX bookmarks_oper_path_idx ON bookmarks USING gin((js @# '$.tags.term') jsonb_path_ops);
-EXPLAIN ( ANALYZE, COSTS OFF) SELECT COUNT(*) FROM bookmarks WHERE js @# '$.tags.term' @> '"NYC"';
-                                              QUERY PLAN
-------------------------------------------------------------------------------------------------------
- Aggregate (actual time=1.136..1.136 rows=1 loops=1)
-   ->  Bitmap Heap Scan on bookmarks (actual time=0.213..1.098 rows=285 loops=1)
-         Recheck Cond: ((js @# '$."tags"."term"'::jsonpath) @> '"NYC"'::jsonb)
-         Heap Blocks: exact=285
-         ->  Bitmap Index Scan on bookmarks_oper_path_idx (actual time=0.148..0.148 rows=285 loops=1)
-               Index Cond: ((js @# '$."tags"."term"'::jsonpath) @> '"NYC"'::jsonb)
- Planning time: 0.228 ms
- Execution time: 1.309 ms
-(8 rows)
-```
-
 ### Path modes
 
-The path engine has two modes, strict and lax, the latter is   default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.
+The path engine has two modes, strict and lax, the latter is  default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.
 
-In __strict__ mode any structural errors (  an attempt to access a non-existent member of an object or element of an array)  raises an error (it is up to `JSON_XXX` function to actually report it, see `ON ERROR` clause).
-For example: 
+ In __lax__ mode the path engine:
 
+ * suppresses the structural errors and  converts them to the empty SQL/JSON sequences.
 ```sql
-SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON ERROR); -- returns ERROR:  SQL/JSON member not found
+SELECT jsonb '{"a":1}' @? 'lax $.b ? (@ > 1)';
+ ?column?
+----------
+ f
 ```
-Notice,  `JSON_VALUE` function needs `ERROR ON ERROR`  to report the error  , since default behaviour  `NULL ON ERROR` suppresses error reporting and returns `null`.
-
-In __strict__ mode  using an array accessor on a scalar value  or  object triggers error handling.
+* unwraps arrays.
 ```sql
-SELECT JSON_VALUE(jsonb '1', 'strict $[0]' ERROR ON ERROR);
-ERROR:  SQL/JSON array not found
-SELECT JSON_VALUE(jsonb '1', 'strict $.a' ERROR ON EMPTY ERROR ON ERROR);
-ERROR:  SQL/JSON member not found
+SELECT jsonb '[1,2,[3,4,5]]' @? 'lax $[*] ? (@ == 5)';
+ ?column?       
+----------
+ t
+ SELECT jsonb '[1,2,[3,4,5]]' @? 'lax $ ? (@ == 5)';
+ ?column?        
+----------
+ t
 ```
 
- In __lax__ mode the path engine suppresses the structural errors and  converts them to the empty SQL/JSON sequences.  Depending on `ON EMPTY` clause  the empty SQL/JSON sequences  will be  interpreted as `null` by default ( `NULL ON EMPTY`) or raise an ERROR ( `ERROR ON EMPTY`).
-
+In __strict__ mode structural errors (missing keys) resulted  `null` 
 ```sql
-SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON ERROR);
- json_value
-------------
+SELECT jsonb '{"a":1}' @? 'strict $.b ? (@ > 1)';
+ ?column?
+----------
  (null)
-(1 row)
-SELECT JSON_VALUE(jsonb '1', 'lax $.a' ERROR ON EMPTY ERROR ON ERROR);
-ERROR:  no SQL/JSON item
 ```
-
-Also,  in __lax__ mode arrays of size 1 is interchangeable with the singleton. 
-
-Example of automatic array wrapping in lax mode:
+and requires an exact nesting in jsonpath expression.
 ```sql
-SELECT JSON_VALUE(jsonb '1', 'lax $[0]' ERROR ON ERROR);
- json_value
-------------
- 1
-(1 row)
+SELECT jsonb '[1,2,[3,4,5]]' @? 'strict $[*] ? (@[*] == 5)';
+ ?column?
+----------
+ t
+ SELECT jsonb '[1,2,[3,4,5]]' @? 'strict $[*] ? (@ == 5)';
+ ?column?
+----------
+ f
 ```
 
 ### Path Elements
@@ -360,23 +337,21 @@ It denotes as  `.` and could be one of the 8 methods:
    
   ~ __size()__ -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar in __lax__ mode  and error `ERROR:  SQL/JSON array not found` in __strict__ mode.  
 ```sql
-SELECT JSON_VALUE('[1,2,3]', '$.size()' RETURNING int);
- json_value
-------------
-          3
-(1 row)
+SELECT jsonb_path_query('{"a": [1,2,3,4,5]}', '$.a[*] ? (@ > 2).type().size()');
+ jsonb_path_query
+------------------
+ 1
+ 1
+ 1
+(3 rows)
+
+SELECT jsonb_path_query('{"a": [1,2,3,4,5]}', 'strict $.a[*] ? (@ > 2).type().size()');
+ERROR:  SQL/JSON array not found
+DETAIL:  jsonpath item method .size() can only be applied to an array
 ```
 In more complex case,  we can wrap SQL/JSON sequence into an array and apply `.size()` to the result:
 ```sql
  SELECT JSON_VALUE(JSON_QUERY('[1,2,3]', '$[*] ? (@ > 1)' WITH WRAPPER), '$.size()' RETURNING int);
- json_value
-------------
-          2
-(1 row)
- ```
- Or use our automatic wrapping extension to the path expression
- ```sql
-SELECT JSON_VALUE('[1,2,3]', '[$[*] ? (@ > 1)].size()' RETURNING int);
  json_value
 ------------
           2
@@ -387,91 +362,15 @@ SELECT JSON_VALUE('[1,2,3]', '[$[*] ? (@ > 1)].size()' RETURNING int);
    ~ __`double()`__ - converts a string or numeric to an approximate numeric value.
    ~ __`floor()`__ - the same as `FLOOR` in SQL
    ~ __`abs()`__  - the same as `ABS` in SQL
-   ~ __`datetime()`__ - converts a character string to an SQL datetime type, optionally using a conversion template ( [templates examples](https://www.postgresql.org/docs/current/static/functions-formatting.html)) . Default template is ISO - "yyyy-dd-mm".    Default timezone could be specified  as a second argument of __datetime()__ function, it applied  only if  template contains **TZH** and there is no 	timezone in input data.  That helps to keep jsonpath operators and functions to be immutable and, hence, indexable.
-    
- 
- PostgreSQL adds support of  conversion of UNIX epoch (double) to `timestamptz`.
-```sql
-SELECT JSON_VALUE('"10-03-2017"','$.datetime("dd-mm-yyyy")');
- json_value
-------------
- 2017-03-10
-(1 row)
-SELECT JSON_VALUE('"12:34:56"','$.datetime().type()');
-       json_value
-------------------------
- time without time zone
-(1 row)
-
--- SQL Standard is strict about matching of data and template
--- An error occurs if some data doesn't contains timezone
-
-SELECT js @* '$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH") ? (@ < "2000-01-01".datetime())' FROM house;
-ERROR:  Invalid argument for SQL/JSON datetime function
-
--- Identify "problematic" dates (no TZH specified)
-SELECT js @* '$.info.dates[*] ? ((@.datetime("dd-mm-yy hh24:mi:ss TZH") < "2000-01-01".datetime()) is unknown)' FROM house;
-   ?column?
---------------
- "01-02-2015"
-(1 row)
-
--- Add default timezone
-SELECT js @* '$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss TZH","+3") ? (@ < "2000-01-01".datetime())' FROM house;
-          ?column?
------------------------------
- "1957-10-04T19:28:34+00:00"
- "1961-04-12T09:07:00+03:00"
-(2 rows)
-
--- datetime cannot compared to string
-SELECT js @* '$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss") ? (@ < "2000-01-01")' FROM house;
- ?column? 
-----------
-(0 rows)
--- rejected items in previous query
-SELECT js @* '$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss") ? ((@ < "2000-01-01") is unknown)' FROM house;
-       ?column?
------------------------
- "2015-02-01T00:00:00"
- "1957-10-04T19:28:34"
- "1961-04-12T09:07:00"
-(3 rows)
--- 
-SELECT js @* '$.info.dates[*].datetime("dd-mm-yy hh24:mi:ss") ? (@ > "1961-04-12".datetime())' FROM house;
-       ?column?
------------------------
- "2015-02-01T00:00:00"
- "1961-04-12T09:07:00"
-(2 rows)
-
-SELECT js @* '$.info.dates[*].datetime("dd-mm-yy") ? (@ > "1961-04-12".datetime())' FROM house;
-   ?column?
---------------
- "2015-02-01"
-(1 row)
-
--- UNIX epoch to timestamptz
-SELECT jsonb '0' @* '$.datetime().type()';
-          ?column?
-----------------------------
- "timestamp with time zone"
-(1 row)
-
-SELECT jsonb '[0, 123.45]' @* '$.datetime()';
-            ?column?            
---------------------------------
- "1970-01-01T00:00:00+00:00"
- "1970-01-01T00:02:03.45+00:00"
-(2 rows)
-```
    ~ __keyvalue()__ - transforms json to an SQL/JSON sequence of objects with a known schema. Example:
    ```sql
-   SELECT JSON_QUERY( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue()' WITH WRAPPER);
-                                       ?column?
---------------------------------------------------------------------------------------
- [{"key": "a", "value": 123}, {"key": "b", "value": 456}, {"key": "c", "value": 789}]
-(1 row)
+   SELECT jsonb_path_query( '{"a": 123, "b": 456, "c": 789}', '$.keyvalue()');
+          jsonb_path_query
+-------------------------------------
+ {"id": 0, "key": "a", "value": 123}
+ {"id": 0, "key": "b", "value": 456}
+ {"id": 0, "key": "c", "value": 789}
+(3 rows)
 ```
 
  **PostgreSQL extensions**:
@@ -480,16 +379,16 @@ Examples:
 
 ```sql
 -- Wildcard member accessor returns the values of all elements without looking deep.
-SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.*';
-   ?column?
----------------
+SELECT jsonb_path_query( '{"a":{"b":[1,2]}, "c":1}','$.*');
+ jsonb_path_query
+------------------
  {"b": [1, 2]}
  1
 (2 rows)
 
 --  Recursive wildcard member accessor "unwraps"  all objects and arrays
-SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**';
-           ?column?
+SELECT jsonb_path_query( '{"a":{"b":[1,2]}, "c":1}','$.**');
+       jsonb_path_query
 ------------------------------
  {"a": {"b": [1, 2]}, "c": 1}
  {"b": [1, 2]}
@@ -500,30 +399,14 @@ SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**';
 (6 rows)
 
 -- Specify range 
-SELECT jsonb '{"a":{"b":[1,2]}, "c":1}' @* '$.**{2 to last}';
- ?column?
-----------
+SELECT jsonb_path_query( '{"a":{"b":[1,2]}, "c":1}','$.**{2 to last}');
+ jsonb_path_query
+------------------
  [1, 2]
  1
  2
 (3 rows)
 ```
- 
-  2.   __automatic wrapping__  - `[path]` is equivalent to `WITH WRAPPER`  clause in `JSON_QUERY`.
-   ```sql
-   SELECT JSON_QUERY('[1,2,3]', '[$[*]]');
- json_query
-------------
- [1, 2, 3]
-(1 row)
-
-SELECT JSON_QUERY('[1,2,3]', '$[*]' WITH WRAPPER);
- json_query
-------------
- [1, 2, 3]
-(1 row)
-```
-
    
  ### Filter expression
 A filter expression is similar to a `WHERE` clause in SQL, it is used to remove SQL/JSON items from an SQL/JSON sequence if they do not satisfy a predicate. The syntax uses a question mark `?` followed by a parenthesized predicate. In __lax__ mode, any SQL/JSON arrays in the operand are automatically unwrapped. The predicate is evaluated for each SQL/JSON item in the SQL/JSON sequence.  Predicate returns `Unknown` (SQL NULL) if any error occured during evaluation of its operands and execution. The result is those SQL/JSON items for which the predicate resulted in `True`, `False` and `Unknown` are rejected. 
