@@ -2,6 +2,7 @@
 
 <img src="slon-json.png"
      alt="Slon with json-ish trunk"
+     align="left" width=600
      style="float: left; margin-right: 10px;" />
 This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON PATH - the json query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a "Gentle Guide to JSONPATH in PostgreSQL", the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
 
