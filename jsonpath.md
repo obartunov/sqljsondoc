@@ -280,6 +280,12 @@ WHERE jb @@ '$.tags[*].term == "NYC"';
 (8 rows)
 ```
 
+`Jsquery` extension (sqljson branch) provides additional GIN opclasses for jsonpath:
+* `jsonb_path_value_ops` - best for exact and range queries
+* `jsonb_laxpath_value_ops` - the same as above, but skips array path items from the hashing and greatly simplifies extraction of lax JSON path queries. 
+* `jsonb_value_path_ops` - good for exact queries and 
+
+
 ### Path modes
 
 The path engine has two modes, strict and lax, the latter is  default, that is,  the standard tries to facilitate matching of the  (sloppy) document structure and path expression.
@@ -562,9 +568,12 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 
 - `like_regex` supports posix regular expressions,  while the  standard requires xquery regexps.
 - `json_path_specification` extended to be an expression of `jsonpath` type. The standard requires `character_string_literal`.
--  Use boolean  expression on the path, PostgreSQL extension
-- `.**`  - recursive wildcard member accessor, PostgreSQL extension
-- `json[b] op jsonpath` - PostgreSQL extension
+-  Use boolean  expression on the path, PostgreSQL extension.
+- `.**`  - recursive wildcard member accessor, PostgreSQL extension.
+- `json[b] op jsonpath` - PostgreSQL extension.
+- `datetime` is not supported in PostgreSQL 12.
+
+PostgreSQL 12 has __the best__ implementation of JSON Path.
 
 <table style="float:right">
 <tr>
@@ -574,6 +583,16 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 <td>JSON Path (15)</td align="center"><td align="center">14/15</td><td align="center"> 11/15</td><td align="center">5/15</td><td align="center">2/15</td>
 </tr>
 </table>
+
+## SQL/JSON Roadmap
+* SQL/JSON functions from SQL-2016 standard
+* `datetime` support in JSON Path
+* Parameters for opclasses - using jsonpath to specify parts of jsonb to index
+http://www.sai.msu.su/~megera/postgres/talks/opclass_pgcon-2018.pdf
+* Jsquery GIN opclasses to core
+* Extend jsonpath syntax
+* COPY with support of jsonpath
+* Subscripting for jsonb 
 
  ## Links
 * Github Postgres Professional repository
