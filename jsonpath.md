@@ -170,6 +170,28 @@ SELECT jsonb_path_query('[]', 'strict $.a', silent => true);
 ```
 
 #### Examples ####
+
+To run an example write `SELECT` before function call, for example:
+```sql
+SELECT jsonb_path_exists('{"a": 1}', '$.a');
+```
+
+```sql
+jsonb_path_exists('{"a": 1}', '$.a') => true
+jsonb_path_exists('{"a": 1}', '$.b') => false
+
+jsonb_path_match('{"a": 1}', '$.a == 1') => true
+jsonb_path_match('{"a": 1}', '$.a >= 2') => false
+
+jsonb_path_query('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 2)') => 3, 4, 5 (3 rows)
+jsonb_path_query('{"a": [1,2,3,4,5]}', '$.a[*] ? (@ > 5)') =>  (0 rows)
+
+jsonb_path_query_array('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 2)') => [3, 4, 5]
+jsonb_path_query_array('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 5)') => []
+
+jsonb_path_query_first('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 2)') => 3
+jsonb_path_query_first('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 5)') => NULL
+```
 ### `Jsonpath` operators
 
 To accelerate JSON path queries using existing indexes for `jsonb`  (GIN index using built-in  `jsonb_ops` or `jsonb_path_ops`)  PostgreSQL extends the standard with two  boolean operators for `json[b]` and `jsonpath` data types.
