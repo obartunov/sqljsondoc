@@ -197,7 +197,7 @@ jsonb_path_query_first('{"a": [1,2,3,4,5]}','$.a[*] ? (@ > 5)') => NULL
 To accelerate JSON path queries using existing indexes for `jsonb`  (GIN index using built-in  `jsonb_ops` or `jsonb_path_ops`)  PostgreSQL extends the standard with two  boolean operators for `json[b]` and `jsonpath` data types.
 
 * `json[b] @? jsonpath` -  exists  operator, returns bool.  Check that path expression returns non-empty SQL/JSON sequence.
-* `json[b] @~ jsonpath` - match operator, returns the result of boolean predicate (*PostgreSQL extension*).
+* `json[b] @@ jsonpath` - match operator, returns the result of json path predicate.
 
 ```sql
 SELECT js @?  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
@@ -206,47 +206,42 @@ SELECT js @?  '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90)' FROM house;
  t
 (1 row)
 
-SELECT js @~  '$.floor[*].apt[*].area <  20' FROM house;
+SELECT js @@  '$.floor[*].apt[*].area <  20' FROM house;
  ?column?
 ----------
  f
 (1 row)
 ```
-`jsonb @? jsonpath` and `jsonb @~ jsonpath` are as fast as `jsonb @> jsonb`  (for equality operation),  but  `jsonpath` supports more complex expressions, for example:
+`jsonb @? jsonpath` and `jsonb @@ jsonpath` are as fast as `jsonb @> jsonb`  (for equality operation),  but  `jsonpath` supports more complex expressions.
+
+Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses.
 ```sql
-SELECT count(*) FROM house WHERE   js @~ '$.info.dates[*].datetime("dd-mm-yy")  > "1945-03-09".datetime()';
- count
--------
-     1
-(1 row)
-```
-Operators exists `@?` and match `@~`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses.
-```sql
-SELECT COUNT(*) FROM bookmarks 
+EXPLAIN (analyze, costs off) SELECT COUNT(*) FROM bookmarks
 WHERE jb @? '$.tags[*] ? (@.term == "NYC")';
-                                       QUERY PLAN
+                                           QUERY PLAN
 ------------------------------------------------------------------------------------------------
- Aggregate (actual time=0.529..0.529 rows=1 loops=1)
-   ->  Bitmap Heap Scan on bookmarks (actual time=0.080..0.502 rows=285 loops=1)
+ Aggregate (actual time=0.608..0.608 rows=1 loops=1)
+   ->  Bitmap Heap Scan on bookmarks (actual time=0.121..0.578 rows=285 loops=1)
          Recheck Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
          Heap Blocks: exact=285
-         ->  Bitmap Index Scan on bookmarks_jb_path_idx (actual time=0.045..0.045 rows=285 loops=1)
+         ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual time=0.082..0.082 rows=285 loops=1)
                Index Cond: (jb @? '$."tags"[*]?(@."term" == "NYC")'::jsonpath)
- Planning time: 0.053 ms
- Execution time: 0.553 ms
+ Planning Time: 0.072 ms
+ Execution Time: 0.642 ms
 (8 rows)
 
-SELECT COUNT(*) FROM bookmarks 
-WHERE jb @~ '$.tags[*].term == "NYC"';
-                                        QUERY PLAN                                               -----------------------------------------------------------------------------------------------
-Aggregate (actual time=0.930..0.930 rows=1 loops=1)
-   ->  Bitmap Heap Scan on bookmarks (actual time=0.133..0.884 rows=285 loops=1)
-         Recheck Cond: (jb @~ '($."tags"[*]."term" == "NYC")'::jsonpath)
+EXPLAIN (analyze, costs off) SELECT COUNT(*) FROM bookmarks
+WHERE jb @@ '$.tags[*].term == "NYC"';
+                                           QUERY PLAN
+------------------------------------------------------------------------------------------------
+ Aggregate (actual time=0.676..0.676 rows=1 loops=1)
+   ->  Bitmap Heap Scan on bookmarks (actual time=0.125..0.645 rows=285 loops=1)
+         Recheck Cond: (jb @@ '($."tags"[*]."term" == "NYC")'::jsonpath)
          Heap Blocks: exact=285
-         ->  Bitmap Index Scan on bookmarks_jb_path_idx (actual time=0.073..0.073 rows=285 loops=1)
-               Index Cond: (jb @~ '($."tags"[*]."term" == "NYC")'::jsonpath)
- Planning time: 0.135 ms
- Execution time: 0.973 ms
+         ->  Bitmap Index Scan on bookmarks_jb_idx1 (actual time=0.087..0.087 rows=285 loops=1)
+               Index Cond: (jb @@ '($."tags"[*]."term" == "NYC")'::jsonpath)
+ Planning Time: 0.067 ms
+ Execution Time: 0.710 ms
 (8 rows)
 ```
 
