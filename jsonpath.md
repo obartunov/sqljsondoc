@@ -56,7 +56,7 @@ The result of this path expression will be information about apartments with roo
 ```sql
 '$.floor[*].apt[*] ? (@.area > 40 && @.area < 90) ? (@.rooms > 2)'
 ```
-It's possible to use the __path variables__ in path expression, whose values are set in __`PASSING`__ clause of invoked SQL/JSON function. For example (js is a column of type JSON):
+It's possible to use the __path variables__ in path expression, whose values are set in __`PASSING`__ clause of invoked SQL/JSON function (not implemented in PostgreSQL 12). For example (js is a column of type JSON):
 ```sql
 SELECT JSON_QUERY(js, '$.floor[*].apt[*] ? (@.area > $min && @.area < $max)' PASSING 40 AS min, 90 AS max WITH WRAPPER) FROM house;
                                json_query
@@ -89,7 +89,7 @@ Example of using several filters in json path expression, which returns room num
 SELECT JSON_VALUE(js, '$.floor[*] ? (@.level > 1).apt[*] ? (@.area > 40 && @.area < 90).no' RETURNING int) FROM house;
  json_value
 ------------
-          5
+     5
 (1 row)
 ```
 
@@ -108,7 +108,7 @@ SELECT JSON_QUERY( js , '$.floor[*].apt[*].keyvalue() ? (@.key == "no").value' W
 
 ## JSONPATH in PostgreSQL
 
-In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path  variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .  It  is possible to specify arithmetic or boolean  (*PostgreSQL extension*) expression on the path. *Path can be enclosed in brackets to return an array similar to WITH WRAPPER clause in SQL/JSON query functions. This is a PostgreSQL extension )*.  
+In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path variable, path literal or  expression in parentheses and zero or more operators ( json accessors) .
 
 Examples of vaild `jsonpath`:
 ```sql
@@ -132,6 +132,44 @@ DETAIL:  syntax error, unexpected GREATER_P at or near ">"
 ```
 An [Example](#how-path-expression-works) of how path expression works.
 
+### `Jsonpath` functions
+
+* `jsonb_path_exists()`, returns `boolean`. Test whether a JSON path expression returns any SQL/JSON items.
+* `jsonb_path_match()`,  returns `boolean`. Evaluate JSON path predicate.
+* `jsonb_path_query()`, returns `setof jsonb`. Extract a sequence of SQL/JSON items from a JSON value.
+* `jsonb_path_query_array()`, returns `jsonb`. Extract a sequence of SQL/JSON items wrapped into JSON array.
+* `jsonb_path_query_first()`, returns `jsonb`. Extract the first SQL/JSON item from a JSON value.
+
+All `jsonb_path_xxx()` functions have the same signture:
+```sql
+jsonb_path_xxx(
+    js jsonb,
+    jsp jsonpath,
+    vars jsonb DEFAULT '{}',
+    silent boolean DEFAULT false
+)
+```
+`vars` is a jsonb object used for passing jsonpath variables:
+```sql
+SELECT jsonb_path_query_array('[1,2,3,4,5]', '$[*] ? (@ > $x)', vars => '{"x": 2}');
+ jsonb_path_query_array 
+------------------------
+ [3, 4, 5] 
+```
+
+`silent` flag enables suppression of errors:
+```sql
+SELECT jsonb_path_query('[]', 'strict $.a');
+ERROR:  SQL/JSON member not found
+DETAIL:  jsonpath member accessor can only be applied to an object
+
+SELECT jsonb_path_query('[]', 'strict $.a', silent => true);
+ jsonb_path_query 
+------------------
+(0 rows)
+```
+
+#### Examples ####
 ### `Jsonpath` operators
 
 To accelerate JSON path queries using existing indexes for `jsonb`  (GIN index using built-in  `jsonb_ops` or `jsonb_path_ops`)  PostgreSQL extends the standard with two  boolean operators for `json[b]` and `jsonpath` data types.
