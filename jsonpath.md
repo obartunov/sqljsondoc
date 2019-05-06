@@ -1,4 +1,4 @@
-## Gentle Guide to JSONPATH in PostgreSQL
+# Gentle Guide to JSONPATH in PostgreSQL
 
 <img src="slon-json.png"
      alt="Slon with json-ish trunk"
@@ -52,7 +52,12 @@ CREATE TABLE house(js) AS SELECT jsonb '
 }
 ';
 ```
-It can be illustrated as [this picture](house-json.png).
+It can be illustrated as a json tree:
+
+<img src="house-json.png"
+     alt="json tree"
+     align="left" width=600
+     style="float: left; margin-right: 10px;" />
 
  Consider the following path expression:
 ```sql
