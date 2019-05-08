@@ -15,7 +15,7 @@ PostgreSQL has two JSON  data types - the textual `json` data type to store an e
 
 ## SQL/JSON Path language 
 
-The main task of the path language is to specify  the parts (the projection)  of JSON data to be retrieved by path engine for the  SQL/JSON query functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(`.`)  used for member access and `[]` for array access, arrays starts from zero (SQL arrays starts from 1).
+The main task of the path language is to specify the parts (the projection)  of JSON data to be retrieved by path engine for the  SQL/JSON query functions.  The language is designed to be flexible enough to meet the current needs and to be adaptable to the future use cases. Also, it is integratable into SQL engine, i.e., the semantics of predicates and operators generally follow SQL.  To be friendly to JSON users, the language resembles  JavaScript - dot(`.`)  used for member access and `[]` for array access, arrays starts from zero (SQL arrays starts from 1).
 
 Example of two-floors house:
 ```sql
@@ -103,7 +103,7 @@ SELECT JSON_VALUE(js, '$.floor[*] ? (@.level > 1).apt[*] ? (@.area > 40 && @.are
 (1 row)
 ```
 
-Path expression may  contains several  __item methods__ (out of eight predefined functions), which applies to the result of preceding path expression. For example,  item method `.double()` converts `area` into a double number.
+Path expression may contains several  __item methods__ (out of eight predefined functions), which applies to the result of preceding path expression. For example,  item method `.double()` converts `area` into a double number.
 ```sql
 '$.floor[0].apt[1].area.double()'
 ```
@@ -287,7 +287,7 @@ __path literal__
 
 __path variable__
 ~ ```$``` -- context item
-~ ```$var``` -- named variable, value is set in `PASSING` clause (*may be of   datetime type*)
+~ ```$var``` -- named variable, value is set in `PASSING` clause
 ~ ```@``` -- value of the current item in a filter
 ~ ```last``` - JSON last subscript of an array
 
@@ -606,7 +606,7 @@ ERROR:  bad jsonpath representation
 ```
 
 
-PostgreSQL 12 has __the best__ implementation of JSON Path.
+PostgreSQL 12 has __the most complete__ implementation of JSON Path.
 
 <table style="float:right">
 <tr>
@@ -620,7 +620,7 @@ PostgreSQL 12 has __the best__ implementation of JSON Path.
 ## SQL/JSON Roadmap
 * SQL/JSON functions from SQL-2016 standard
 * `datetime` support in JSON Path
-* Parameters for opclasses - using jsonpath to specify parts of jsonb to index
+* Parameters for opclasses - specify parts of jsonb to index using jsonpath
 http://www.sai.msu.su/~megera/postgres/talks/opclass_pgcon-2018.pdf
 * Jsquery GIN opclasses to core
 * Extend jsonpath syntax
@@ -628,7 +628,7 @@ http://www.sai.msu.su/~megera/postgres/talks/opclass_pgcon-2018.pdf
 * Subscripting for jsonb 
 
  ## Links
-* Github Postgres Professional repository
+* Full implementation of SQL/JSON (expected in PostgreSQL 13)
 https://github.com/postgrespro/sqljson
 *  WEB-interface to play with SQL/JSON
 * Technical Report (SQL/JSON) - available for free
