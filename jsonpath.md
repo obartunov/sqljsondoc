@@ -13,7 +13,7 @@ Authors: Oleg Bartunov and Nikita Glukhov.
 
 SQL-2016 standard doesn't describes the JSON data type, but instead it  introduced SQL/JSON data model (not  JSON data type like XML )  with string storage and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.
 
-PostgreSQL has two JSON  data types - the textual `json` data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while `json` should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented as SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
+PostgreSQL has two JSON  data types - the textual `json` data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types [(json primitive types and corresponding  PostgreSQL types)](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while `json` should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented as SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
 
 ## SQL/JSON Path language 
 
@@ -561,7 +561,7 @@ SELECT jsonb_path_query_array(js,'$.floor[*].apt[*] ? (@.area > 40 && @.area < 9
 ```
 #### Indexing ####
 
-Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses (one can use existing indexes).
+Operators exists `@?` and match `@`  can be speeded up by GIN index using built-in `jsonb_ops` or `jsonb_path_ops` opclasses (one can use existing indexes). 
 
 To run examples first download `http://www.sai.msu.su/~megera/postgres/files/bookmarks.jsonb.sql.gz`, load it into PostgreSQL and create index:
 ```sql 
@@ -625,9 +625,9 @@ WHERE
 ```
 
 `Jsquery` extension (sqljson branch) provides additional GIN opclasses for jsonpath:
-* `jsonb_path_value_ops` - best for exact and range queries
+* `jsonb_path_value_ops` - best for exact and range queries on values, exact path searches
 * `jsonb_laxpath_value_ops` - the same as above, but skips array path items from the hashing and greatly simplifies extraction of lax JSON path queries. 
-* `jsonb_value_path_ops` - good for exact queries and 
+* `jsonb_value_path_ops` - good for exact value searches  and wildcard path queries.
 
 
 ## SQL/JSON conformance
@@ -669,9 +669,8 @@ PostgreSQL 12 has __the most complete__ implementation of JSON Path.
 * Parameters for opclasses - specify parts of jsonb to index using jsonpath
 http://www.sai.msu.su/~megera/postgres/talks/opclass_pgcon-2018.pdf
 * Jsquery GIN opclasses to core
-* Extend jsonpath syntax
+* Extend jsonpath syntax (array,object,sequence construction, object subscripting, lambda expressions, user-defined item methods and functions)
 * COPY with support of jsonpath
-* Subscripting for jsonb 
 
  ## Links
 * Full implementation of SQL/JSON (expected in PostgreSQL 13)
