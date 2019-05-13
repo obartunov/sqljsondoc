@@ -4,6 +4,7 @@
      align="left" width=400
      style="float: left; margin-right: 10px;" />
 This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON Path - the JSON query language, and several functions and operators, which use the path language to work with jsonb data. Consider this document as a tutorial , the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
+
 Authors: Oleg Bartunov and Nikita Glukhov.
 
 <P>
