@@ -3,7 +3,8 @@
      alt="Slon with json-ish trunk"
      align="left" width=400
      style="float: left; margin-right: 10px;" />
-This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON Path - the JSON query language, and several functions and operators, which used the language to work with jsonb data. Consider this document as a tutorial , the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
+This document describes SQL/JSON implementation as committed to PostgreSQL 12, which consists of implementation of JSON Path - the JSON query language, and several functions and operators, which use the path language to work with jsonb data. Consider this document as a tutorial , the reference guide is available as a part of offical PostgreSQL documentation for release 12. 
+Authors: Oleg Bartunov and Nikita Glukhov.
 
 <P>
 
@@ -11,7 +12,7 @@ This document describes SQL/JSON implementation as committed to PostgreSQL 12, w
 
 SQL-2016 standard doesn't describes the JSON data type, but instead it  introduced SQL/JSON data model (not  JSON data type like XML )  with string storage and path language used by certain SQL/JSON functions to query JSON.   SQL/JSON data model is a sequences of items, each of which is consists of SQL scalar values with an additional SQL/JSON null value,  and composite data structures using JSON arrays and objects.
 
-PostgreSQL has two JSON  data types - the textual `json` data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while json should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented in SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
+PostgreSQL has two JSON  data types - the textual `json` data type to store an exact copy of the input text and the `jsonb` data type -   the binary storage for  JSON data converted to PostgreSQL types, according  mapping in   [json primitive types and corresponding  PostgreSQL types](https://www.postgresql.org/docs/current/static/datatype-json.html).  SQL/JSON data model adds datetime type to these primitive types, but it only used for comparison operators in path expression and stored on disk as a string.  Thus, `jsonb` data is already conforms to SQL/JSON data model (ORDERED and UNIQUE KEYS), while `json` should be converted according the mapping.  SQL-2016 standard describes two sets of SQL/JSON functions : constructor functions and query functions.  Constructor functions use values of SQL types and produce JSON values (JSON objects or JSON arrays) represented as SQL character or binary string types. Query functions evaluate SQL/JSON path language expressions against JSON values, producing values of SQL/JSON types, which are converted to SQL types.
 
 ## SQL/JSON Path language 
 
@@ -118,20 +119,36 @@ SELECT JSON_QUERY( js , '$.floor[*].apt[*].keyvalue() ? (@.key == "no").value' W
 
 ## JSONPATH in PostgreSQL
 
-In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode (strict | lax), followed by a  path, which is a  sequence of path elements,  started from path variable, path literal or  expression in parentheses and zero or more operators ( JSON accessors ).
+In PostgreSQL the SQL/JSON path language is implemented as  **`JSONPATH`**  data type - the binary representation of parsed SQL/JSON path expression to effective query JSON data.  **Path expression** is an optional  path mode ``strict` or `lax` (default), followed by a  path or unary/binary expression on paths. Path is a sequence of path elements,  started from path variable, path literal or  expression in parentheses and zero or more operators ( JSON accessors, filters, and item methods ).
 
 Examples of vaild `jsonpath`:
 ```sql
-'$.floor'
-'($+1)'
-'$+1'
--- boolean predicate in path, extension
-'($.floor[*].apt[*].area > 10)'
-'$.floor[*].apt[*] ? (@.area == null).no'
+'$' -- the whole JSON document (context item)
+'$foo' -- variable "foo"
+'"bar"' -- string literal
+'12.345' -- numeric literal
+'true' -- boolean literal
+'null' -- null
+'$.floor' -- field accessor on $
+'$.floor[*]' -- the same, followed by wildcard array accessor
+
+-- complex path with filters and variables
+'$.floor[*] ? (@.level < $max_level).apt[*] ? (@.area > $min_area).no'
+
+-- arithmetic expressions:
+'-$.a[*]' -- unary
+'$.a + 3' -- binary
+'2 * $.a - (3 / $.b + $x.y)' -- complex expression with variables
+
+-- parenthesized expression used as starting element of a path,
+-- followed by two item methods ".abs()" and ".ceil()"
+'($ + 1).abs().ceil()'
+
+'$.floor[*].apt[*].area > 10' -- boolean predicate (extension)
 ```
-`Jsonpath` could be an expression:
+`Jsonpath` in SQL/JSON functions could be an expression (extension to standard):
 ```sql
-'$' || '.' || 'a'
+JSON_QUERY('{"a": 1}', '$' || '.' || 'a')
 ```
 
 Syntactical errors in `jsonpath` are reported
@@ -283,33 +300,38 @@ SELECT jsonb '[1,2,[3,4,5]]' @? 'strict $[*] ? (@[*] == 5)';
 ### Path Elements
 
 __path literal__
-~ JSON primitive types : unicode text, numeric, true, false, null
+
+JSON primitive types:
+ * unicode text (`"foo"`)
+ * numeric (`123`, `12.345`, `1.23e+45`)
+ * boolean (`true`, `false`)
+ * `null`
 
 __path variable__
-~ ```$``` -- context item
-~ ```$var``` -- named variable, value is set in `PASSING` clause
-~ ```@``` -- value of the current item in a filter
-~ ```last``` - JSON last subscript of an array
+ * `$` -- context item
+ * `$var` -- named variable, value is set in `PASSING` clause
+ * `@` -- value of the current item in a filter
+ * `last` - JSON last subscript of an array
 
 __expression in parentheses__
-~  ```($a + 2)```
+ *  `($a + 2)`
 
 __Path elements__ 
- ~ __member accessor__  -- `.name` or `."$name"`.  It is used to access a member of an object by key name.  If the key name does not begin with a dollar sign and meets the JavaScript rules of an Identifier, then the member name can be written in clear text, else it can be written as a character string literal. For example: `$.color, "$."color of a pen"`.  In __strict__ mode, every SQL/JSON item in the SQL/JSON sequence must be an object with a member having the specified key name. If this condition is not met, the result is an error.  In __lax__ mode, any SQL/JSON array in the SQL/JSON sequence is unwrapped. Unwrapping only goes **one deep**; that is, if there is an array of arrays, the outermost array is unwrapped, leaving the inner arrays alone.
+ * __member accessor__  -- `.name` or `."$name"`.  It is used to access a member of an object by key name.  If the key name does not begin with a dollar sign and meets the JavaScript rules of an Identifier, then the member name can be written in clear text, else it can be written as a character string literal. For example: `$.color, "$."color of a pen"`.  In __strict__ mode, every SQL/JSON item in the SQL/JSON sequence must be an object with a member having the specified key name. If this condition is not met, the result is an error.  In __lax__ mode, any SQL/JSON array in the SQL/JSON sequence is unwrapped. Unwrapping only goes **one deep**; that is, if there is an array of arrays, the outermost array is unwrapped, leaving the inner arrays alone.
 
  
- ~ __wildcard member accessor__  --  `.*`, the values of all attributes of the current  object.  In __strict__ mode, every SQL/JSON item in the SQL/JSON sequence must be an object. If this condition is not met, the result is an error. In __lax__ mode, any SQL/JSON array in the SQL/JSON sequence is unwrapped.
+ * __wildcard member accessor__  --  `.*`, the values of all attributes of the current  object.  In __strict__ mode, every SQL/JSON item in the SQL/JSON sequence must be an object. If this condition is not met, the result is an error. In __lax__ mode, any SQL/JSON array in the SQL/JSON sequence is unwrapped.
  
- ~ __array element accessor__  -- `[1,5 to LAST]`, the second and the six-th to the last array elements of the array . Since jsonpath follows javascript conventions rather than SQL, `[0]` accesses is the first element in the array. `LAST` is the special variable to handle arrays of unknown length, its value is the size of the array minus 1.   In the __strict__ mode, subscripts must be singleton numeric values between 0 and last; in __lax__ mode, any subscripts that are out of bound are simply ignored. In both __strict__ and __lax__ mode, non-numeric subscripts are an error.
+ * __array element accessor__  -- `[1,5 to LAST]`, the second and the six-th to the last array elements of the array . Since jsonpath follows javascript conventions rather than SQL, `[0]` accesses is the first element in the array. `LAST` is the special variable to handle arrays of unknown length, its value is the size of the array minus 1.   In the __strict__ mode, subscripts must be singleton numeric values between 0 and last; in __lax__ mode, any subscripts that are out of bound are simply ignored. In both __strict__ and __lax__ mode, non-numeric subscripts are an error.
  
- ~ __wildcard array element accessor__ -- `[*]`, all array elements. In __strict__ mode, the operand must be an array, in __lax__ mode, if the operand is not an array, then one is provided by wrapping it in an array before unwrapping, `$[*]` is the same as `$[0 to last]`.  The latter is not valid in __strict__ mode, since `$[0 to last]` requires at least one array element and raise an error if `$` is the empty array , while `$[*]`  returns `null` in that case.
- ~ __filter expression__ --  ? (expression) , the result of filter expression may be `unknown`, `true`,  `false`. 
- ~ __item method__ -- is the function, that operate on an SQL/JSON item and return an SQL/JSON item. 
+ * __wildcard array element accessor__ -- `[*]`, all array elements. In __strict__ mode, the operand must be an array, in __lax__ mode, if the operand is not an array, then one is provided by wrapping it in an array before unwrapping, `$[*]` is the same as `$[0 to last]`.  The latter is not valid in __strict__ mode, since `$[0 to last]` requires at least one array element and raise an error if `$` is the empty array , while `$[*]`  returns `null` in that case.
+ * __filter expression__ --  `? (expression)` , the result of filter expression may be `unknown`, `true`,  `false`. 
+ * __item method__ -- is the function, that operate on an SQL/JSON item and return an SQL/JSON item. 
 It denotes as  `.` and could be one of the 8 methods:
 
-  ~ __type()__ - returns a character string that names the type of the SQL/JSON item ( PostgreSQL 12 supports `"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`).
+  - __type()__ - returns a character string that names the type of the SQL/JSON item ( PostgreSQL 12 supports `"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`).
    
-  ~ __size()__ -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar in __lax__ mode  and error `ERROR:  SQL/JSON array not found` in __strict__ mode.  
+  - __size()__ -  returns the size of an SQL/JSON item, which is the number of elements in the array or 1 for SQL/JSON object or scalar in __lax__ mode  and error `ERROR:  SQL/JSON array not found` in __strict__ mode.  
 ```sql
 SELECT jsonb_path_query('{"a": [1,2,3,4,5]}', '$.a[*] ? (@ > 2).type().size()');
  jsonb_path_query
@@ -328,15 +350,15 @@ In more complex case,  we can wrap SQL/JSON sequence into an array and apply `.s
  SELECT JSON_VALUE(JSON_QUERY('[1,2,3]', '$[*] ? (@ > 1)' WITH WRAPPER), '$.size()' RETURNING int);
  json_value
 ------------
-          2
+     2
 (1 row)
  ```
  
-   ~ __`ceiling()`__ - the same as `CEILING` in SQL
-   ~ __`double()`__ - converts a string or numeric to an approximate numeric value.
-   ~ __`floor()`__ - the same as `FLOOR` in SQL
-   ~ __`abs()`__  - the same as `ABS` in SQL
-   ~ __keyvalue()__ - transforms json to an SQL/JSON sequence of objects with a known schema. 
+   - __`ceiling()`__ - the same as `CEILING` in SQL
+   - __`double()`__ - converts a string or numeric to an approximate numeric value.
+   - __`floor()`__ - the same as `FLOOR` in SQL
+   - __`abs()`__  - the same as `ABS` in SQL
+   - __`keyvalue()`__ - transforms json to an SQL/JSON sequence of objects with a known schema. 
    Example:
    ```sql
    SELECT jsonb_path_query( '{"a": {"x": 123}, "b": {"y": 456}, "c": {"z": 789}}', '$.*.keyvalue()');
@@ -347,7 +369,7 @@ In more complex case,  we can wrap SQL/JSON sequence into an array and apply `.s
  {"id": 80, "key": "z", "value": 789}
 (3 rows)
 ```
-`id` is a PostgreSQL specific identificator of `key,value` pair.
+`id` is a PostgreSQL specific identificator of object from `key,value` pair originates.
 ```sql
 SELECT jsonb_path_query( '{"a": {"x": 123, "y": 456}, "c": {"z": 789}}', '$.*.keyvalue()');
            jsonb_path_query
@@ -411,11 +433,11 @@ Within a filter, the special variable `@` is used to reference the current SQL/J
 
 The SQL/JSON path language has the following predicates:
 
- - `exists` predicate, to test if a path expression has a non-empty result.
-- Comparison predicates `==`, `!=`, `<>`, `<`, `<=`, `>`, and `>=`.
-- `like_regex` for string pattern matching.  Optional parameter`flag` can be combination of `i`, `s`, `m`, `x`, default value is `s`.
-- `starts with` to test for an initial substring (prefix).
-- `is unknown` to test for `Unknown` results. Its operand should be in parentheses.
+ - `exists` predicate, test if a path expression has a non-empty result.
+ - Comparison predicates `==`, `!=`, `<>`, `<`, `<=`, `>`, and `>=`.
+ - `like_regex` for string pattern matching.  Optional parameter`flag` can be combination of `i`, `s` (default), `m`, `x`.
+ - `starts with` to test for an initial substring (prefix).
+ - `is unknown` to test for `Unknown` results. Its operand should be in parentheses.
 
 JSON literals `true, false` are parsed into the SQL/JSON model as the SQL boolean values `True` and `False`. 
 ```sql
@@ -495,6 +517,29 @@ SELECT jsonb_path_query(js,'$.floor.apt ? ((@.area / @.rooms > 0) is unknown)') 
           jsonb_path_query
 -------------------------------------
  {"no": 3, "area": null, "rooms": 2}
+(1 row)
+```
+
+### Arithmetic expressions
+
+Unary arithmetic operators (`+` and `-`) can be applied to the sequences of arbitrary length:
+```sql
+SELECT jsonb_path_query_array(js, '-$.floor[*].apt[*].area ? (@.type() == "number")') FROM house;
+ jsonb_path_query_array
+------------------------
+ [-40, -80, -100, -60]
+(1 row)
+```
+
+Binary arithmetic operators (`+`, `-`, `*`, `/`, `%`) require both operands to return singleton numeric items:
+```sql
+SELECT jsonb_path_query(js, '$.floor[*].apt[*].area ? (@.type() == "number") + 10') FROM house;
+ERROR:  left operand of jsonpath operator + is not a single numeric value
+
+SELECT jsonb_path_query(js, '$.floor[*].apt[*].area ? (@ == 100) + 10') FROM house;
+ jsonb_path_query
+------------------
+ 110
 (1 row)
 ```
 
