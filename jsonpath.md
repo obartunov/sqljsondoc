@@ -677,6 +677,7 @@ http://www.sai.msu.su/~megera/postgres/talks/opclass_pgcon-2018.pdf
 * Full implementation of SQL/JSON (expected in PostgreSQL 13)
 https://github.com/postgrespro/sqljson
 *  WEB-interface to play with SQL/JSON
+http://sqlfiddle.postgrespro.ru/#!21/0/2379
 * Technical Report (SQL/JSON) - available for free
 http://standards.iso.org/i/PubliclyAvailableStandards/c067367_ISO_IEC_TR_19075-6_2017.zip
 * Jsquery - PostgreSQL extension for json
